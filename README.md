@@ -5,16 +5,16 @@ Code generator based on the database schema and templates
 Функции:
 
 Сформировать схему для таблицы:
-WFGenFields -Instance "SQLSERV01" -Database "MyTestDB" -TableName "TestTable" | ConvertTo-Json -Depth 3 | Out-File "table-schema.json"
+<pre>WFGenFields -Instance "SQLSERV01" -Database "MyTestDB" -TableName "TestTable" | ConvertTo-Json -Depth 3 | Out-File "table-schema.json"</pre>
 
 Сгенерировать скрипт по шаблону (развернуть макровставки):
-Get-Content "table-schema.json" -Raw | ConvertFrom-Json | ObjectToHash | WFMakeScript -Template C:\temp\_WebForm4\Template_AJAX.txt | Out-File "test-ajax.html"
+<pre>Get-Content "table-schema.json" -Raw | ConvertFrom-Json | ObjectToHash | WFMakeScript -Template C:\temp\_WebForm4\Template_AJAX.txt | Out-File "test-ajax.html"</pre>
 
 Сгенерировать набор скриптов в соответствии с конфигурационным файлом makescript.json:
-WFMakeAllScripts -columns "table-schema.json" -target_dir "trash"
+<pre>{WFMakeAllScripts -columns "table-schema.json" -target_dir "trash"</pre>
 
 Пример конфигурационного файла makescript.json:
-{
+<pre>{
 "WS": {
 	"name": "ws{0}.asmx",
 	"template": "Template_ASMX.txt",
@@ -33,7 +33,7 @@ WFMakeAllScripts -columns "table-schema.json" -target_dir "trash"
 	"enable": "false",
 	"params": { }
 	}
-}
+}</pre>
 
 "name" 		- определяет шалон имени выходного файла, можно использовать макровставку {0}, которая заменится на имя таблицы
 "template" 	- какой шаблон использовать для генерации
@@ -94,26 +94,27 @@ Like 		- Отобрать поля по похожести имени задан
 				&quot;*&quot; - все (по-умолчанию)
 				&quot;*name&quot; - только те, что заканчиваются на name и т.п.
 
+</pre></div>
 
 Примеры:
 отобрать все поля, кроме BLOB и binary (а так же скрытых и вычисляемых, т.к. они явно не разрешены). т.к. разделителей нет, слепится все в кучу:
-&lt;FL Types=&quot;bx&quot;&gt;{0}&lt;/FL&gt;
+<pre>&lt;FL Types=&quot;bx&quot;&gt;{0}&lt;/FL&gt;</pre>
 
 отобрать первичные ключи и любые поля с типом дата и сформировать список через запятую:
-&lt;FL Types=&quot;PD&quot;&gt;{0}&lt;DL&gt;, &lt;/DL&gt;&lt;/FL&gt;
+<pre>&lt;FL Types=&quot;PD&quot;&gt;{0}&lt;DL&gt;, &lt;/DL&gt;&lt;/FL&gt;</pre>
 
 отобрать только поля-флаги с типом дата, сделать список через запятую и перенос строки:
-&lt;FL Types=&quot;&amp;FD&quot;&gt;{0}&lt;DL&gt;, 
-&lt;/DL&gt;&lt;/FL&gt; 
+<pre>&lt;FL Types=&quot;&amp;FD&quot;&gt;{0}&lt;DL&gt;, 
+&lt;/DL&gt;&lt;/FL&gt; </pre>
 
 отобрать поля текстового типа заканчивающиеся на name (Fullname, FirstName и т.п.)
-&lt;FL Like=&quot;*name&quot; Types=&quot;S&quot;&gt;{0} &lt;/FL&gt;
+<pre>&lt;FL Like=&quot;*name&quot; Types=&quot;S&quot;&gt;{0} &lt;/FL&gt;</pre>
 
 сформировать список внешних ссылок в виде [локальное поле] =&gt; [таблица куда ссылаемся].[поле на которое ссылаемся]
-&lt;FL Types=&quot;L&quot;&gt;{0} =&gt; {5}.{6}&lt;/FL&gt;
+<pre>&lt;FL Types=&quot;L&quot;&gt;{0} =&gt; {5}.{6}&lt;/FL&gt;</pre>
 
 сформировать список ссылок на эту таблицу из других
-&lt;FL Types=&quot;R&quot;&gt;
+<pre>&lt;FL Types=&quot;R&quot;&gt;
 	Обнаружена внешняя ссылка: {5}.{6} -&gt; [table_name].{0})
-&lt;/FL&gt; 
-</pre></div>
+&lt;/FL&gt; </pre>
+
