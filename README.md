@@ -44,11 +44,11 @@ Code generator based on the database schema and templates
 
 <h2>Описание макро-вставок шаблонов.</h2>
 
-<pre>[table_name]</pre> - имя таблицы
-<pre>[webform_version]</pre> - версия генератора кода
-[param:mode] - вставить параметр &quot;mode&quot; из конфигурации текущего шаблона (определяется в makescript.json для каждой таблицы)
-[include:template_filepath] - вставить другой шаблон (с парсингом)
-&lt;CALC&gt;2^4&lt;/CALC&gt; - посчитать выражение (Invoke-Expression)
+<p><b>[table_name]</b> - имя таблицы</p>
+<p><b>[webform_version]</b> - версия генератора кода</p>
+<p><b>[param:mode]</b> - вставить параметр &quot;mode&quot; из конфигурации текущего шаблона (определяется в makescript.json для каждой таблицы)</p>
+<p><b>[include:template_filepath]</b> - вставить другой шаблон (с парсингом)</p>
+<p><b>&lt;CALC&gt;2^4&lt;/CALC&gt;</b> - посчитать выражение (Invoke-Expression)</p>
 
 &lt;AL&gt;...[V]...&lt;/AL&gt; - Вертикальное выравнивание блока по меткам [V] (добить пробелами так, что бы это место было друг над другом). С табуляцией пока не дружим, превращаем в пробелы
 &lt;IF FE=FieldName&gt;&lt;/IF&gt; - проверяет условие (FE = наличие заданного поля в таблице) и вставляет блок 
