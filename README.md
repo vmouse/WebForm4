@@ -65,7 +65,7 @@ Code generator based on the database schema and templates
 {7} - Field number
 {8} - Referenced table primary key (for R filter)</pre></p>
 
-<p><b>params:</b></p>
+<p><b>FL,DL tags atributes (params):</b></p>
 
 <p><b>Types</b> Отобрать поля соответствующие маске типов, в которой большая буква - включить класс полей, маленькая - исключить</p>
 <p>
@@ -73,20 +73,20 @@ Code generator based on the database schema and templates
 		<b>A</b> - Все поля, кроме скрытых &quot;h&quot; и вычисляемых &quot;v&quot;<br />
 		<b>H</b> - Cкрытые поля (обычно те, которые не передаются в стандартных вызовах, но надо поминить что они могут возвращаться в результатах)<br />
 		<b>P</b> - Primary keys<br />
-		L - Lookup fields (Foreign keys)<br />
-		T - Recursive tree fields (lookup to self)<br />
-		G - Guids<br />
-		S - Text/strings fields (char, varchar, ...)<br />
-		I - Integer fields (int, bigint)<br />
-		N - Numeric fields (Money, Float, ...)<br />
-		D - Date|time fields<br />
-		B - Blob fields<br />
-		X - Binary fields (timestamp)<br />
-		F - Flags fields (fl_ ...)<br />
-		V - вычисляемые поля имен (SelectName)<br />
-		S - поля подходящие для составления SelectName<br />
-		R - поля других таблиц ссылающиеся на эту таблицу (заполнятся как обычные Lookup). не имеет смысла использовать R совместно с другими флагами<br />
-		&lt; - признак продолжения пред.списка, т.е. надо ли вставить разделитель перед первым элементом<br />
+		<b>L</b> - Lookup fields (Foreign keys)<br />
+		<b>T</b> - Recursive tree fields (lookup to self)<br />
+		<b>G</b> - Guids<br />
+		<b>S</b> - Text/strings fields (char, varchar, ...)<br />
+		<b>I</b> - Integer fields (int, bigint)<br />
+		<b>N</b> - Numeric fields (Money, Float, ...)<br />
+		<b>D</b> - Date|time fields<br />
+		<b>B</b> - Blob fields<br />
+		<b>X</b> - Binary fields (timestamp)<br />
+		<b>F</b> - Flags fields (fl_ ...)<br />
+		<b>V</b> - вычисляемые поля имен (SelectName)<br />
+		<b>S</b> - поля подходящие для составления SelectName<br />
+		<b>R</b> - поля других таблиц ссылающиеся на эту таблицу (заполнятся как обычные Lookup). не имеет смысла использовать R совместно с другими флагами<br />
+		<b>&lt;</b> - признак продолжения пред.списка, т.е. надо ли вставить разделитель перед первым элементом<br />
 	<p>если не указано ни одного разрешающего фильтра (большая буква), то используются &quot;A&quot; (все поля, кроме v и h) и потом из него вычитаются указанные запреты. </p>
 	<p>если на одно поле срабатывает несколько фильтров или флагов, то преимущество у запретов</p>
 	<p>скрытые типы полей нужно явно включать (H или V) для появления в списке</p>
@@ -96,7 +96,7 @@ Code generator based on the database schema and templates
 				&quot;*&quot; - все (по-умолчанию)<br />
 				&quot;*name&quot; - только те, что заканчиваются на name и т.п.
 
-Примеры:
+<h2>Примеры:</h2>
 отобрать все поля, кроме BLOB и binary (а так же скрытых и вычисляемых, т.к. они явно не разрешены). т.к. разделителей нет, слепится все в кучу:
 <pre>&lt;FL Types=&quot;bx&quot;&gt;{0}&lt;/FL&gt;</pre>
 
