@@ -42,10 +42,10 @@ Code generator based on the database schema and templates
 
 
 
-<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%">Описание макро-вставок шаблонов.
+<h2>Описание макро-вставок шаблонов.</h2>
 
-[table_name] - имя таблицы
-[webform_version] - версия генератора кода
+<pre>[table_name]</pre> - имя таблицы
+<pre>[webform_version]</pre> - версия генератора кода
 [param:mode] - вставить параметр &quot;mode&quot; из конфигурации текущего шаблона (определяется в makescript.json для каждой таблицы)
 [include:template_filepath] - вставить другой шаблон (с парсингом)
 &lt;CALC&gt;2^4&lt;/CALC&gt; - посчитать выражение (Invoke-Expression)
@@ -94,7 +94,7 @@ Like 		- Отобрать поля по похожести имени задан
 				&quot;*&quot; - все (по-умолчанию)
 				&quot;*name&quot; - только те, что заканчиваются на name и т.п.
 
-</pre></div>
+
 
 Примеры:
 отобрать все поля, кроме BLOB и binary (а так же скрытых и вычисляемых, т.к. они явно не разрешены). т.к. разделителей нет, слепится все в кучу:
