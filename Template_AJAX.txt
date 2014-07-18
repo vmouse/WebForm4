@@ -1,0 +1,92 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>[table_name]</title>
+	<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+	<meta charset="UTF-8" />
+	<link href="/js/select2/select2.css" rel="stylesheet"/>
+	<script type='text/javascript' src='/js/jquery.min.js'></script>
+	<script type='text/javascript' src="/js/select2/select2.min.js"></script>
+	<script type='text/javascript' src="/js/select2/select2_locale_ru.js"></script>
+
+	<style>
+		.[table_name]_form input, select, .select
+		{
+			width: 600px;
+		}
+	</style>
+
+</head>
+<body>
+
+<script id="script_select_[table_name]" type="text/javascript">
+	$.postJSON = function (url, data, callback) {
+		return jQuery.ajax({
+			'type': 'POST',
+			'url': url,
+			'contentType': 'application/json',
+			'data': JSON.stringify(data),
+			'dataType': 'json',
+			'success': callback
+		});
+	};
+
+	$(document).ready(function () {
+	   rows_per_page = 20;
+	   $("#select_[table_name]").select2({
+			placeholder: "Search for [table_name]",
+			minimumInputLength: 2,
+			ajax: {
+				url: "/_srv/ws[table_name].asmx/Find",
+				type: "POST",
+				dataType: "json",
+				quietMillis: 500,
+				params: {
+					contentType: 'application/json; charset=utf-8'
+				},
+				crossDomain: true,
+				xhrFields: {
+					withCredentials: true
+				},
+				data: function (search_str, page, context) { // context is paging token with next id 
+					return JSON.stringify({
+					SubMode: 1,
+					PageNumber: page-1,
+					RowsPerPage: rows_per_page,
+					SearchToken: search_str || null
+					});
+				},
+				results: function (data, page) {
+					var res = [];
+					$.each(data.d, function (num, item) { res.push({ id: <FL Types="P">item.{0}<DL>+</DL></FL>, text: <FL Types="V">item.{0}<DL> + </DL></FL> })});
+					return { results: res, more: res.length == rows_per_page, context: (res.length > 0) ? res[res.length - 1].id : null };
+				}
+			}//, formatResult: (function (item) { return item.SelectName; }), 
+		});
+		$("#select_[table_name]").on("change", function (ev) { 
+			$.postJSON("/_srv/ws[table_name].asmx/Get", {
+				<FL Types="P">{0}: ev.val<DL>,
+				</DL></FL>
+			}, function (records) {
+					$.each(records.d, function (key, val) {
+						if (!! $("#"+key).length) {
+							if (isdate = /\/Date\((\d+)\)\//.exec(val)) { val = Date(isdate[1]); }
+							$("#"+key).val(val);
+						}
+		  });
+			});
+	  });
+});
+
+</script>
+<div class="[table_name]_form">
+<p><input type="hidden" class="select" id="select_[table_name]"/></p>
+<FL Types="P"><input type="hidden" class="[table_name]_input" id="{0}" /><DL>
+</DL></FL>
+<FL Types="pvf"><p>{1}<br /><input type="text" class="[table_name]_input" id="{0}" /></p><DL>
+</DL></FL>
+<FL Types="VFH"><p>{1}<br /><input type="text" class="[table_name]_input" id="{0}" /></p><DL>
+</DL></FL>
+</div>
+</body>
+</html>    

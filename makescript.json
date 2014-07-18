@@ -1,0 +1,74 @@
+{
+"WS": {
+	"name": "ws{0}.asmx",
+	"template": "Template_ASMX.txt",
+	"enable": "false",
+	"params": { }
+	},
+"AJAX": {
+	"name": "{0}.html",
+	"template": "Template_AJAX.txt",
+	"enable": "false",
+	"params": { }
+	},
+"PowerWebPart": {
+	"name": "{0}.pwp",
+	"template": "Template_PWP.txt",
+	"enable": "false",
+	"params": { }
+	},
+"viewAccess": {
+	"name": "{0}_viewAccess.sql",
+	"template": "Template_viewAccess.txt",
+	"enable": "false",
+	"params": { "sp_create_mode": "ALTER" }
+	},
+"viewMain": {
+	"name": "{0}_viewMain.sql",
+	"template": "Template_viewMain.txt",
+	"enable": "false",
+	"params": { "sp_create_mode": "ALTER" }
+	},
+"viewResolved": {
+	"name": "{0}_viewResolved.sql",
+	"template": "Template_viewResolved.txt",
+	"enable": "false",
+	"params": { "sp_create_mode": "ALTER" }
+	},
+"SPSelect": {
+	"name": "{0}_spSelect.sql",
+	"template": "Template_spSelect.txt",
+	"enable": "false",
+	"params": { "sp_create_mode": "ALTER" }
+	},
+"SPRetrieve": {
+	"name": "{0}_spRetrieve.sql",
+	"template": "Template_spRetrieve.txt",
+	"enable": "false",
+	"params": { "sp_create_mode": "ALTER" }
+	},
+"SPInsert": {
+	"name": "{0}_spInsert.sql",
+	"template": "Template_spInsert.txt",
+	"enable": "false",
+	"params": { "sp_create_mode": "ALTER" }
+	},
+"SPUpdate": {
+	"name": "{0}_spUpdate.sql",
+	"template": "Template_spUpdate.txt",
+	"enable": "false",
+	"params": { "sp_create_mode": "ALTER" }
+	},
+"SPDelete": {
+	"name": "{0}_spDelete.sql",
+	"template": "Template_spDelete.txt",
+	"enable": "false",
+	"params": { "sp_create_mode": "ALTER" }
+	},
+"SPMain": {
+	"name": "{0}_spMain.sql",
+	"template": "Template_spMain.txt",
+	"enable": "false",
+	"params": { "sp_create_mode": "ALTER" }
+	}
+}
