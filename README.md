@@ -2,6 +2,46 @@ WebForm4
 ========
 Code generator based on the database schema and templates
 
+Функции:
+
+Сформировать схему для таблицы:
+WFGenFields -Instance "SQLSERV01" -Database "MyTestDB" -TableName "TestTable" | ConvertTo-Json -Depth 3 | Out-File "table-schema.json"
+
+Сгенерировать скрипт по шаблону (развернуть макровставки):
+Get-Content "table-schema.json" -Raw | ConvertFrom-Json | ObjectToHash | WFMakeScript -Template C:\temp\_WebForm4\Template_AJAX.txt | Out-File "test-ajax.html"
+
+Сгенерировать набор скриптов в соответствии с конфигурационным файлом makescript.json:
+WFMakeAllScripts -columns "table-schema.json" -target_dir "trash"
+
+Пример конфигурационного файла makescript.json:
+{
+"WS": {
+	"name": "ws{0}.asmx",
+	"template": "Template_ASMX.txt",
+	"enable": "false",
+	"params": { }
+	},
+"AJAX": {
+	"name": "{0}.html",
+	"template": "Template_AJAX.txt",
+	"enable": "true",
+	"params": { }
+	},
+"PowerWebPart": {
+	"name": "{0}.pwp",
+	"template": "Template_PWP.txt",
+	"enable": "false",
+	"params": { }
+	}
+}
+
+"name" 		- определяет шалон имени выходного файла, можно использовать макровставку {0}, которая заменится на имя таблицы
+"template" 	- какой шаблон использовать для генерации
+"enable"	- true - генерировать, false - не генировать
+"params"	- дополнительные параметры, которые транслируются в шаблонное макро [param:xxxx]
+
+
+
 <div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%">Описание макро-вставок шаблонов.
 
 [table_name] - имя таблицы
