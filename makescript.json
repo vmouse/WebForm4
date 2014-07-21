@@ -17,6 +17,12 @@
 	"enable": "false",
 	"params": { }
 	},
+"funcAccess": {
+	"name": "{0}_funcAccess.sql",
+	"template": "Template_funcAccess.txt",
+	"enable": "false",
+	"params": { "sp_create_mode": "ALTER" }
+	},
 "viewAccess": {
 	"name": "{0}_viewAccess.sql",
 	"template": "Template_viewAccess.txt",
@@ -70,5 +76,11 @@
 	"template": "Template_spMain.txt",
 	"enable": "false",
 	"params": { "sp_create_mode": "ALTER" }
+	},
+"ASP": {
+	"name": "{0}.asp",
+	"template": "Template_ASP.txt",
+	"enable": "true",
+	"params": { }
 	}
 }
