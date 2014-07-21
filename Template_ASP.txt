@@ -38,24 +38,12 @@ with Element
 	.MakeHidden Form.Name & "_{0}", ""
 	Form.AddToGroup Element,"H0"
 end with
-</FL><FL Types="pl">
+</FL><FL Types="pfb">
 Set Element = New FormControl
 with Element
 	.AssignField [table_name]("@{0}"), "{0}"
 	.Label = "{1}"
-	.MakeText Form.Name & "_{0}", ""
-	.Options("size") = "{9}"
-	.Options("class") = "user_input"
-	Form.AddToGroup Element,"C0"
-	.Required = True
-	.AddRequiredValidator "You must specify " & .Label
-	.AddMaxLenValidator {9}, "Length of text should not exceed {9} symbols"
-end with
-</FL><FL Types="L">
-Set Element = New FormControl
-with Element
-	.AssignFieldNull [table_name]("@{6}"), -3, "{6}"
-	.Label = "{1}"
+	<IF FL="L">
 	.MakeSelect Form.Name & "_{6}", "-3"
 	.AddSelectOption "Chose One",  "-1"
 	.AddSelectOption "---------------",  "-2"
@@ -63,10 +51,47 @@ with Element
 	.FillSOFromRowset {5}_{0}_List ,"SelectName","{6}"
 	.AddNotEqualValidator -1,"You must choose " & .Label
 	.AddNotEqualValidator -2,"You must choose " & .Label
+	</IF><ELIF FL="S" FC="{9} -gt 63">
+	.MakeTextArea Form.Name & "_{0}", ""
+	.Options("size") = "{9}"
+	.Options("cols") = "40"
+	.Options("rows") = "5"
+	</ELIF><ELIF FL="S" FC="{9} -gt 1">
+	.MakeText Form.Name & "_{0}", ""
+	.Options("size") = "{9}"
+	.AddMaxLenValidator {9}, "Length of text should not exceed {9} symbols"
+	</ELIF><ELIF FL="S" FC="{9} -eq 1">
+	.MakeCheckBox Form.Name & "_{0}", "0","1","0"
+	</ELIF><ELIF FL="D">
+	.MakeDate Form.Name & "_{0}", NOW ' or NULL for empty
+	</ELIF><IF NULLABLE=False>True
+	.Required = True
+	.AddRequiredValidator "You must specify " & .Label[ELSE].Required = False</IF>
 	.Options("class") = "user_input"
 	Form.AddToGroup Element,"C0"
 end with
+</FL><FL Types="B">
+Set Element = New FormControl
+with Element
+	.AssignField [table_name]("@{0}"), "{0}"
+	.Label = "{1}"
+	.MakeFile Form.Name & "_{0}"
+	.Options("class") = "user_input"
+	.Options("size") = "40"
+	Form.AddToGroup Element,"F0"
+	.AddFileValidExtValidator Split("jpg|jpeg", "|"), "Invalid file extention (jpg,jpeg only)"
+	'.AddFileValidContentValidator Split("image/jpeg|image/pjpeg", "|"), "File content is not valid jpeg-image"
+	'.AddFileValidMaxSizeValidator "100Kb", "Limit of file size is exceeded (100Kb)"
+Set Element = New FormControl
+with Element
+	.Label = "{1} clear"
+	.Comment = ""
+	.MakeCheckBox Form.Name & "_{0}_clear", "0","1","0"
+	.Options("class") = "user_input"
+	Form.AddToGroup Element,"FC0"end with
+end with
 </FL>
+
 Set Element = New FormControl
 with Element
 	.MakeSubmit  Form.Name & "_Submit", "Save"
