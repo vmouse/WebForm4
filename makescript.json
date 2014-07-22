@@ -77,6 +77,24 @@
 	"enable": "false",
 	"params": { "sp_create_mode": "ALTER" }
 	},
+"ASPmodel": {
+	"name": "{0}_model.asp",
+	"template": "Template_ASP_model.txt",
+	"enable": "true",
+	"params": { }
+	},
+"ASPcontrol": {
+	"name": "{0}_control.asp",
+	"template": "Template_ASP_control.txt",
+	"enable": "false",
+	"params": { }
+	},
+"ASPview": {
+	"name": "{0}_view.asp",
+	"template": "Template_ASP_view.txt",
+	"enable": "false",
+	"params": { }
+	},
 "ASP": {
 	"name": "{0}.asp",
 	"template": "Template_ASP.txt",
