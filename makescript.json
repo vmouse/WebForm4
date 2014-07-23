@@ -2,13 +2,13 @@
 "WS": {
 	"name": "ws{0}.asmx",
 	"template": "Template_ASMX.txt",
-	"enable": "false",
+	"enable": "true",
 	"params": { }
 	},
 "AJAX": {
 	"name": "{0}.html",
 	"template": "Template_AJAX.txt",
-	"enable": "false",
+	"enable": "true",
 	"params": { }
 	},
 "PowerWebPart": {
@@ -50,7 +50,7 @@
 "SPRetrieve": {
 	"name": "{0}_spRetrieve.sql",
 	"template": "Template_spRetrieve.txt",
-	"enable": "false",
+	"enable": "true",
 	"params": { "sp_create_mode": "ALTER" }
 	},
 "SPInsert": {
@@ -80,7 +80,7 @@
 "ASPmodel": {
 	"name": "{0}_model.asp",
 	"template": "Template_ASP_model.txt",
-	"enable": "true",
+	"enable": "false",
 	"params": { }
 	},
 "ASPcontrol": {
@@ -98,7 +98,7 @@
 "ASP": {
 	"name": "{0}.asp",
 	"template": "Template_ASP.txt",
-	"enable": "true",
+	"enable": "false",
 	"params": { }
 	}
 }
