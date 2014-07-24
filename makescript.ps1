@@ -1,4 +1,4 @@
-$DBInstanceKey="#Instance#" # в конфиг через этот элемент передаются параметры базы данных
+﻿$DBInstanceKey="#Instance#" # в конфиг через этот элемент передаются параметры базы данных
 $DBRefKey="#References#" # в конфиге под этим ключом живут ссылки на текущую таблицу 
 $SelectName = "SelectName"
 $SelectShortName = "SelectShortName"
