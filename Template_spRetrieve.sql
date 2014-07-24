@@ -12,16 +12,15 @@
 AS
 
 IF @RowsPerPage<1 
-	SET @RowsPerPage = (SELECT count(*) from Terror)
+	SET @RowsPerPage = (SELECT count(*) from [table_name])
 
 IF @SubMode=0 -- Filling lookup controls. Ranged by RowsPerPage items from @PageNumber
 BEGIN<AL>
 	SELECT * FROM (
-	SELECT <FL Types="PV">{0}<DL>, </DL></FL>, ROW_NUMBER() OVER(ORDER BY terr_name) AS NUMBER
+	SELECT <FL Types="PV">{0}<DL>, </DL></FL>, ROW_NUMBER() OVER(ORDER BY SelectName) AS NUMBER
 	FROM view[table_name]
-	WHERE [v]<FL Types="svfp">(({0} [v]= [v]@{0}) [v]OR (@{0} [v]is NULL))<DL> AND
-		[v]</DL></FL>
-		[v]<FL Types="Svfp<">(({0} [v]LIKE [v]@{0}) [v]OR (@{0} [v]is NULL))<DL> AND
+	WHERE [v]<FL Types="svfpb">(({0} [v]= [v]@{0}) [v]OR (@{0} [v]is NULL))<DL> AND
+		[v]</DL></FL>[v]<FL Types="Svfp<">(({0} [v]LIKE [v]@{0}) [v]OR (@{0} [v]is NULL))<DL> AND
 		[v]</DL></FL><IF FE="fl_deleted"> AND
 		[v]((fl_deleted is NULL) OR (fl_admin_access = 1) OR (<FL Types="P">{0}=@{0}<DL> AND </DL></FL>))</IF>
 	) t1
@@ -58,5 +57,5 @@ ELSE
 	RETURN dbo.funcGetErrorCode('ERRSUBMODE','[table_name]',0)
 GO
 
-GRANT SELECT ON dbo.sp[table_name]_retrieve TO public
+GRANT EXEC ON dbo.sp[table_name]_retrieve TO public
 GO

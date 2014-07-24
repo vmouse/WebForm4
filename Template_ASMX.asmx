@@ -32,7 +32,7 @@ public class ws[table_name] : System.Web.Services.WebService
 	public it[table_name]() {} // default constructor
 		public void Save() {
 			it[table_name] item = Go(1, 0, <FL>{0}<DL>, </DL></FL>).ToArray()[0];
-			<FL Types="AVH">{0} = item.{0};<DL>
+			<FL Types="AVHb">{0} = item.{0};<DL>
 			</DL></FL>
 		}
 		public void Delete(int SubMode) {

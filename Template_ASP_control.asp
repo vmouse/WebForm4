@@ -12,12 +12,12 @@ if Form.WasSubmited then
     if Form.Validated then
       Form.FillFields
       sp[table_name]("@Mode")=1
-      <IFG FL="B">sp[table_name]("@SubMode")= (<FL Types="b"><CALC>[math]::Pow(2,{7}-1)</CALC><DL>+</DL></FL>) ' Update nonfile (blob) fields
+      <IFF FL="B">sp[table_name]("@SubMode")= (<FL Types="b"><CALC>[math]::Pow(2,{7}-1)</CALC><DL>+</DL></FL>) ' Update nonfile (blob) fields
       if Form(Form.Name & "_emp_photo_clear")="1" or _
         (Not IsEmpty(Form(Form.Name & "_emp_photo").FileObject) and _
          Form(Form.Name & "_emp_photo").FileObject.Size>0) then
         sp[table_name]("@SubMode")=CLng(sp[table_name]("@SubMode"))+<FL Types="B"><CALC>[math]::Pow(2,{7}-1)</CALC><DL>+</DL></FL>
-      end if[ELSE]sp[table_name]("@SubMode")=0 ' Update all fields</IFG>
+      end if[ELSE]sp[table_name]("@SubMode")=0 ' Update all fields</IFF>
       ExecFormProc sp[table_name],Form
       if Form.Validated then
         Redirect=RedirectRef
@@ -30,12 +30,12 @@ if Form.WasSubmited then
     if Form.Validated then
       Form.FillFields
       sp[table_name]("@Mode")=1
-      <IFG FL="B">sp[table_name]("@SubMode")= (<FL Types="b"><CALC>[math]::Pow(2,{7}-1)</CALC><DL>+</DL></FL>) ' Update nonfile (blob) fields
+      <IFF FL="B">sp[table_name]("@SubMode")= (<FL Types="b"><CALC>[math]::Pow(2,{7}-1)</CALC><DL>+</DL></FL>) ' Update nonfile (blob) fields
       if Form(Form.Name & "_emp_photo_clear")="1" or _
         (Not IsEmpty(Form(Form.Name & "_emp_photo").FileObject) and _
          Form(Form.Name & "_emp_photo").FileObject.Size>0) then
         sp[table_name]("@SubMode")=CLng(sp[table_name]("@SubMode"))+<FL Types="B"><CALC>[math]::Pow(2,{7}-1)</CALC><DL>+</DL></FL>
-      end if[ELSE]sp[table_name]("@SubMode")=0 ' Update all fields</IFG>
+      end if[ELSE]sp[table_name]("@SubMode")=0 ' Update all fields</IFF>
       <FL Types="P">sp[table_name]("@{0}")=NULL
       </FL>ExecFormProc sp[table_name],Form
       Redirect = Request.ServerVariables("SCRIPT_NAME") & "?" & <FL Types="P">"{0}=" & sp[table_name]("@{0}")<DL>&</DL></FL>

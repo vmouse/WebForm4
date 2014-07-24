@@ -268,7 +268,7 @@ function FillParams($col) {
 	return $params
 }
 
-# Find <IF>,<IFG>,<ELIF>,<ELIFG> blocks
+# Find <IF>,<IFF>,<ELIF>,<ELIFF> blocks
 # $col - одно поле или массив для проврки условия, 
 # 	для каждого поля должны сработать все заданные условия
 #   для массива полей нужно что бы условия сработали хотя бы для одного поля
@@ -300,9 +300,19 @@ function ParseIFMacros($iftype="IF", $text, $col, $prevresult=$false) {
 						$result = $result -and ($colitem -eq $attrvalue)
 					} else { 
 					if ($attrname -eq "FL") {
-						foreach ($ch in [Char[]]$attrvalue) {
-							$result = $result -and ([Char[]]$columns[$colitem]["Flag"] -contains $ch)
+						$found = $false
+						$val = [Char[]]$attrvalue
+						if ($val -notcontains "H") {	$val+="h" }# прячем скрытые поля
+						if ($val -notcontains "V") {	$val+="v" }# прячем вычисляемые поля (SelectName)
+						if ($val -notcontains "R") {	$val+="r" }# прячем внешние ссылки на эту таблицу
+						foreach ($ch in $val) {
+							if ([char]::IsLower($ch)) {
+								$result = $result -and ([Char[]]$columns[$colitem]["Flag"] -notcontains $ch)
+							} else {
+								$found  = $found  -or ([Char[]]$columns[$colitem]["Flag"] -contains $ch)
+							}
 						}
+						$result = $result -and $found
 					} else { 
 					if ($attrname -eq "FC") {
 						$attrvalue = $attrvalue -f (FillParams -col $colitem)
@@ -328,9 +338,111 @@ function ParseIFMacros($iftype="IF", $text, $col, $prevresult=$false) {
 	return @{"prevresult"=$prevresult; "text"=$text}
 }
 
-function ParseFieldList($text, $tagvalue, $can_continue) {
+# $tag - regex match object where:
+#   group[1] - whole tag
+#   group[2] - tag attributes
+#   group[3] - tag value
+function ParseFieldList($tag, $can_continue) {
+#	write-host -ForegroundColor DarkGreen ("Parse: " + $tag.Value)
+	$reg_dl = [regex]"(?sim)<DL\s*?(.*?)>(.*?)<\/DL>"
+	$reg_opt= [regex]"(?sim)(\w+)\s*=\s*(?:(([""'])([^\3]+?)\3)|([^\s^>]*))"
+
+	$fl_opt = $tag.Groups[2].Value
+	$fl_val = $tag.Groups[3].Value
+	# extract DL
+	$dl = $reg_dl.Match($fl_val)
+	if ($dl.Success) {
+		$dl_opt = $dl.Groups[1].Value
+		$dl_val = $dl.Groups[2].Value
+		$fl_val = $fl_val.Replace($dl.Value, $dl_value)
+	} else { $dl_opt = ""; $dl_val = "" }
+
+	$fl_attr = @{}
+	$reg_opt.Matches($fl_opt) | foreach {
+		$fl_attr[$_.Groups[1].Value] = ISNULL -e $_.Groups[4].Value -ifnull $_.Groups[5].Value
+	}
+	$dl_attr = @{}
+	$reg_opt.Matches($dl_opt) | foreach {
+		$dl_attr[$_.Groups[1].Value] = $_.Groups[2].Value
+	}
+
+	$field_list = ""
+	if ($fl_attr["Types"].Length -gt 0) {
+		$fl_filter = [Char[]]($fl_attr["Types"] -replace "\s")
+		$all_fields_base = ($fl_filter -contains "A") -or ($fl_attr["Types"] -ceq $fl_attr["Types"].ToLower())
+	} else { 
+		$all_fields_base = $true 
+		$fl_filter = [Char[]]("A")
+	}
+	$fl_name_filter = ISNULL -e $fl_attr["Like"] -ifnull "*"
+	
+	if ($fl_filter -notcontains "H") {	$fl_filter+="h" }# прячем скрытые поля
+	if ($fl_filter -notcontains "V") {	$fl_filter+="v" }# прячем вычисляемые поля (SelectName)
+	if ($fl_filter -notcontains "R") {	$fl_filter+="r" }# прячем внешние ссылки на эту таблицу
+	
+	if ($fl_filter -contains "&") { # фильтр обязательного совпадения всех указанных флагов
+		$fl_filter = $fl_filter -ne "&"
+		$fl_min_overlap = ($fl_filter | where { [char]::IsUpper($_) }).Count # считаем только разрешающие фильтры
+	} else { $fl_min_overlap = 1; }
+	
+	$columns.keys | where {($DBInstanceKey, $DBRefKey) -notcontains $_} | where {
+		# собираем совпадения флагов фильтра и флагов поля
+		$colflag = [Char[]]$columns[$_]["Flag"]
+		$denied=$_ -notlike $fl_name_filter
+		$overlap = [Char[]]($fl_filter | where { 
+			$colflag -contains $_ 
+		} | foreach { 
+			if ([char]::IsLower($_)) { 
+				$denied = $true
+			} 
+			return $_
+		})
+		return (-not $denied) -and (($overlap.Length -ge $fl_min_overlap) -or $all_fields_base)
+	} | sort { $columns[$_]["Number"]} | foreach {
+		$params = FillParams -col $_
+		
+		$ifmac = ParseIFMacros -iftype "IFF" -text $fl_val -col $_ -prevresult $ifmac["prevresult"]
+		$fl_parsed = $ifmac["text"]
+
+		$continue = ((-not [string]::IsNullOrEmpty($field_list)) -or ($can_continue -and ($fl_filter -contains "<")))
+		if ($continue) {
+#			$field_list += $dl_parsed
+			$field_list += ($dl_val -f $params)
+		}
+		try {
+			$field_list += ($fl_parsed -f $params)
+#			$dl_parsed = ($dl_val -f $params)
+		} catch {
+			Write-Host "`n`nError in template: $Template"
+			Write-Host "Look  entry of <FL> block: " + $fl
+		}
+	}
+
+	return $field_list
+}
+
+#find all blocks between $tagbegin and $tagend, and parse it by $func
+# $tagbegin = regex with 3 groups = 1-whole tag, 2-tag attributes, 3-tag value
+function ParseTagBlocks ($text, $tagbegin, $tagend, $parse_func) {
+	$continue_flag = $false
+	while (($mstop = [regex]::Match($text, $tagend)).Success) {
+		if (-not ($tag = [regex]::Match($mstop.Value, $tagbegin)).Success) {
+			throw "$tagbegin not found for $tagend in position $(mstop.index)"
+		} else { # tag found, start parsing
+			$last_index = -1
+			if ($tag.Index -eq $last_index) {
+				# предыдущий парсинг ничего не изменил в тексте?
+				throw "Parser error!"
+			}
+			$last_index = $tag.Index
+			$parsed = (& $parse_func -tag $tag -can_continue $continue_flag)
+			$continue_flag = -not [string]::IsNullOrEmpty($parsed)
+			$text = $text.Replace($tag.Groups[1].Value, $parsed)
+#			Write-Host $tag.Groups[1].Value, $text
+#			Write-Host ""
+		}
+	}
 	return $text
-	return $text.Replace($tag.Groups[1].Value, $tag.Groups[3].Value)
 }
 
 function WFMakeScript{
@@ -366,125 +478,18 @@ Param(
 		$out = $out.Replace($Matches[0], $ConfigParams[$Matches[1]])
 	}
 
-	$out = (ParseIFMacros -iftype "IFG" -text $out -col $columns)["text"]
+	$out = (ParseIFMacros -iftype "IF" -text $out -col $columns)["text"]
 
-	$reg_fl = [regex]"(?sim).*(<FL\s*?(.*?)>(.*?)<\/FL>)" 
+	$reg_fl = "(?sim).*(<FL\s*?(.*?)>(.*?)<\/FL>)" 
 	$reg_fl_end = "(?sim).*?</FL>" # паттерн вылавливания первого конца тэга FL (нужно для возможности вложенного поиска)
-	$reg_dl = [regex]"(?sim)<DL\s*?(.*?)>(.*?)<\/DL>"
-	$reg_opt= [regex]"(?sim)(\w+)\s*=\s*(?:(([""'])([^\3]+?)\3)|([^\s^>]*))"
-	$reg_eval= [regex]"(?sim)<CALC>(.+?)</CALC>"
-	$reg_align= [regex]"(?sim)<AL\s*?(.*?)>(.+?)</AL>"
 	
-	# Find <FL></FL> blocks, three stages:
-	# 1. find first end tag						- (?si)(.*?<\/FL>)
-	# 2. in founded block, find last start tag	- (?si).*(<FL>)
-	# 3. create full block and replace it (and same other) to parsed
-	$can_continue = $false
 	$dl_parsed = ""
 	$ifmac = @{"prevresult"=$false}
-	
-	while (($fl_end = $reg_fl_end.Match($out)).Success) {
-		if (-not ($fl = [regex]::Match($mstop.Value, $pattern)).Success) {
-			throw "Begining for tag $($fl_end.Value) not found"
-		} else { # tag found, start parsing
-			$can_continue = $false
-			$last_index = -100
-			while (($mstop = [regex]::Match($text, $pattern_end)).Success) { # first stop sequence is found
-				if (($tag = [regex]::Match($mstop.Value, $pattern)).Success) {
-					if ($tag.Index -eq $last_index) {
-						throw "Parser error!"
-					}!!!
-					$last_index = $tag.Index
-					$text = ParseFieldList -text $text -tagvalue $tag -can_continue $can_continue
-					$can_continue = $true
-					Write-Host $tag.Groups[1].Value, $text
-					Write-Host ""
-				} else {
-					throw "Begin of tag not found:
-					" + $mstop.Value
-				}
-			}
-		}
-	#	write-host -ForegroundColor DarkGreen ("Parse: " + $fl.Value)
-		$fl_opt = $fl.Groups[2].Value
-		$fl_val = $fl.Groups[3].Value
-		# extract DL
-		$dl = $reg_dl.Match($fl_val)
-		if ($dl.Success) {
-			$dl_opt = $dl.Groups[1].Value
-			$dl_val = $dl.Groups[2].Value
-			$fl_val = $fl_val.Replace($dl.Value, $dl_value)
-		} else { $dl_opt = ""; $dl_val = "" }
 
-		$fl_attr = @{}
-		$reg_opt.Matches($fl_opt) | foreach {
-			$fl_attr[$_.Groups[1].Value] = ISNULL -e $_.Groups[4].Value -ifnull $_.Groups[5].Value
-		}
-		$dl_attr = @{}
-		$reg_opt.Matches($dl_opt) | foreach {
-			$dl_attr[$_.Groups[1].Value] = $_.Groups[2].Value
-		}
-
-		$field_list = ""
-		if ($fl_attr["Types"].Length -gt 0) {
-			$fl_filter = [Char[]]($fl_attr["Types"] -replace "\s")
-			$all_fields_base = ($fl_filter -contains "A") -or ($fl_attr["Types"] -ceq $fl_attr["Types"].ToLower())
-		} else { 
-			$all_fields_base = $true 
-			$fl_filter = [Char[]]("A")
-		}
-		$fl_name_filter = ISNULL -e $fl_attr["Like"] -ifnull "*"
-		
-		if ($fl_filter -notcontains "H") {	$fl_filter+="h" }# прячем скрытые поля
-		if ($fl_filter -notcontains "V") {	$fl_filter+="v" }# прячем вычисляемые поля (SelectName)
-		if ($fl_filter -notcontains "R") {	$fl_filter+="r" }# прячем внешние ссылки на эту таблицу
-		
-		if ($fl_filter -contains "&") { # фильтр обязательного совпадения всех указанных флагов
-			$fl_filter = $fl_filter -ne "&"
-			$fl_min_overlap = ($fl_filter | where { [char]::IsUpper($_) }).Count # считаем только разрешающие фильтры
-		} else { $fl_min_overlap = 1; }
-		
-		$any_exists = $false;
-		$columns.keys | where {($DBInstanceKey, $DBRefKey) -notcontains $_} | where {
-			# собираем совпадения флагов фильтра и флагов поля
-			$colflag = [Char[]]$columns[$_]["Flag"]
-			$denied=$_ -notlike $fl_name_filter
-			$overlap = [Char[]]($fl_filter | where { 
-				$colflag -contains $_ 
-			} | foreach { 
-				if ([char]::IsLower($_)) { 
-					$denied = $true
-				} 
-				return $_
-			})
-			return (-not $denied) -and (($overlap.Length -ge $fl_min_overlap) -or $all_fields_base)
-		} | sort { $columns[$_]["Number"]} | foreach {
-			$params = FillParams -col $_
-			
-			$ifmac = ParseIFMacros -iftype "IF" -text $fl_val -col $_ -prevresult $ifmac["prevresult"]
-			$fl_parsed = $ifmac["text"]
-
-			$continue = ((-not [string]::IsNullOrEmpty($field_list)) -or ($can_continue -and ($fl_filter -contains "<")))
-			if ($continue) {
-				$field_list += $dl_parsed
-			}
-			try {
-				$field_list += ($fl_parsed -f $params)
-				$dl_parsed = ($dl_val -f $params)
-			} catch {
-				Write-Host "`n`nError in template: $Template"
-				Write-Host "Look  entry of <FL> block: " + $fl
-			}
-			$any_exists = $true
-		}
-
-		$can_continue = $any_exists
-		
-		$out = $out.Replace($fl.Groups[1].Value, $field_list)
-		$fl = $reg_fl.Match($out)
-	}
+	$out = ParseTagBlocks -text $out -tagbegin $reg_fl -tagend $reg_fl_end -parse_func ParseFieldList
 	
 	#find eval blocks
+	$reg_eval= [regex]"(?sim)<CALC>(.+?)</CALC>"
 	$exp = $reg_eval.Match($out)
 	while ($exp.Success) {
 		$out = $out.Replace($exp.Value, (Invoke-Expression $exp.Groups[1].Value))
@@ -492,6 +497,7 @@ Param(
 	}
 	
 	#align
+	$reg_align= [regex]"(?sim)<AL\s*?(.*?)>(.+?)</AL>"
 	$al = $reg_align.Match($out)
 	while ($al.Success) {
 		$al_opt = $al.Groups[1].Value

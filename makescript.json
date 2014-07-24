@@ -1,7 +1,7 @@
 {
 "WS": {
 	"name": "ws{0}.asmx",
-	"template": "Template_ASMX.sqmx",
+	"template": "Template_ASMX.asmx",
 	"enable": "true",
 	"params": { }
 	},

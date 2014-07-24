@@ -104,34 +104,7 @@
 			"file": "makescript.json",
 			"settings":
 			{
-				"buffer_size": 1904,
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "Template_macros.txt",
-			"settings":
-			{
-				"buffer_size": 4570,
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"contents": "WebForm4\n========\nCode generator based on the database schema and templates\n\nФункции:\n\nСформировать схему для таблицы:\n<pre>WFGenFields -Instance \"SQLSERV01\" -Database \"MyTestDB\" -TableName \"TestTable\" | ConvertTo-Json -Depth 3 | Out-File \"table-schema.json\"</pre>\n\nСгенерировать скрипт по шаблону (развернуть макровставки):\n<pre>Get-Content \"table-schema.json\" -Raw | ConvertFrom-Json | ObjectToHash | WFMakeScript -Template C:\\temp\\_WebForm4\\Template_AJAX.txt | Out-File \"test-ajax.html\"</pre>\n\nСгенерировать набор скриптов в соответствии с конфигурационным файлом makescript.json:\n<pre>{WFMakeAllScripts -columns \"table-schema.json\" -target_dir \"trash\"</pre>\n\nПример конфигурационного файла makescript.json:\n<pre>{\n\"WS\": {\n	\"name\": \"ws{0}.asmx\",\n	\"template\": \"Template_ASMX.txt\",\n	\"enable\": \"false\",\n	\"params\": { }\n	},\n\"AJAX\": {\n	\"name\": \"{0}.html\",\n	\"template\": \"Template_AJAX.txt\",\n	\"enable\": \"true\",\n	\"params\": { }\n	},\n\"PowerWebPart\": {\n	\"name\": \"{0}.pwp\",\n	\"template\": \"Template_PWP.txt\",\n	\"enable\": \"false\",\n	\"params\": { }\n	}\n}</pre>\n\n\"name\" 		- определяет шалон имени выходного файла, можно использовать макровставку {0}, которая заменится на имя таблицы\n\"template\" 	- какой шаблон использовать для генерации\n\"enable\"	- true - генерировать, false - не генировать\n\"params\"	- дополнительные параметры, которые транслируются в шаблонное макро [param:xxxx]\n\n\n\n<h2>Описание макро-вставок шаблонов.</h2>\n\n<p><b>[table_name]</b> - имя таблицы</p>\n<p><b>[webform_version]</b> - версия генератора кода</p>\n<p><b>[param:mode]</b> - вставить параметр &quot;mode&quot; из конфигурации текущего шаблона (определяется в makescript.json для каждой таблицы)</p>\n<p><b>[include:template_filepath]</b> - вставить другой шаблон (с парсингом)</p>\n<p><b>&lt;CALC&gt;2^4&lt;/CALC&gt;</b> - посчитать выражение (Invoke-Expression)</p>\n\n<p><b>&lt;AL&gt;...[V]...&lt;/AL&gt;</b> - Вертикальное выравнивание блока по меткам [V] (добить пробелами так, что бы это место было друг над другом). С табуляцией пока не дружим, превращаем в пробелы</p>\n<p><b>&lt;IF expression&gt;true-section[ELSE]false-section&lt;/IF&gt;</b> - проверяет условие и вставляет блок</p><br/>\nexpression:			- набор аттрибутов определяющих условия (если несколько, то совпасть должны все)<br/>\n	FE=\"FieldName\"  - наличие заданного поля в таблице<br/>\n	FS=\"gt 1024\"	- сравнение длины поля (gt, lt, eq, ne, qe, le). (работает только внутри &lt;FL&gt; блока)<br/>\n	FT=\"String\"		- тип поля (String, Datetime, Int, Int64, Byte, Float,...). (работает только внутри &lt;FL&gt; блока)<br/>\n	FL=\"N\" 			- флаг поля. если перечислено несколько флагов, то обязательно совпадение всех. (работает только внутри &lt;FL&gt; блока)<br/>\n[ELSE]				- разделитель ветвления, до [ELSE] работает если expression = true, после [ELSE] если expression = false<br/>\n</p>\n\n<p><b>&lt;FL params&gt;строка_формата&lt;DL params&gt;строка_разделителя&lt;/DL&gt;&lt;/FL&gt;</b> - формирует список полей таблицы по заданному формату. FL могут быть вложенные, соотв. сначала обрабатываются внутренние</p>\n\n<p>В формат подставляются данные о текущем поле:<pre>\n{0} - field name\n{1} - field title (description or name if null one)\n{2} - SQL data type with size/scale/precision (varchar(64))\n{3} - C data type string\n{4} - Nullable C data type string\n{5} - Lookup Table\n{6} - Lookup table key field\n{7} - Field number\n{8} - Referenced table primary key (for R filter)</pre></p>\n\n<p><b>FL,DL tags atributes (params):</b></p>\n\n<p><b>Types</b> Отобрать поля соответствующие маске типов, в которой большая буква - включить класс полей, маленькая - исключить</p>\n<p>\n		<b>&amp;</b> - флаг для отбора на одновременное совпадение всех условий, иначе любое совпавшее минус запреты. <br />\n		<b>A</b> - Все поля, кроме скрытых &quot;h&quot; и вычисляемых &quot;v&quot;<br />\n		<b>H</b> - Cкрытые поля (обычно те, которые не передаются в стандартных вызовах, но надо поминить что они могут возвращаться в результатах)<br />\n		<b>P</b> - Primary keys<br />\n		<b>L</b> - Lookup fields (Foreign keys)<br />\n		<b>T</b> - Recursive tree fields (lookup to self)<br />\n		<b>G</b> - Guids<br />\n		<b>S</b> - Text/strings fields (char, varchar, ...)<br />\n		<b>I</b> - Integer fields (int, bigint)<br />\n		<b>N</b> - Numeric fields (Money, Float, ...)<br />\n		<b>D</b> - Date|time fields<br />\n		<b>B</b> - Blob fields<br />\n		<b>X</b> - Binary fields (timestamp)<br />\n		<b>F</b> - Flags fields (fl_ ...)<br />\n		<b>V</b> - вычисляемые поля имен (SelectName)<br />\n		<b>S</b> - поля подходящие для составления SelectName<br />\n		<b>R</b> - поля других таблиц ссылающиеся на эту таблицу (заполнятся как обычные Lookup). не имеет смысла использовать R совместно с другими флагами<br />\n		<b>&lt;</b> - признак продолжения пред.списка, т.е. надо ли вставить разделитель перед первым элементом<br />\n	<p>если не указано ни одного разрешающего фильтра (большая буква), то используются &quot;A&quot; (все поля, кроме v и h) и потом из него вычитаются указанные запреты. </p>\n	<p>если на одно поле срабатывает несколько фильтров или флагов, то преимущество у запретов</p>\n	<p>скрытые типы полей нужно явно включать (H или V) для появления в списке</p>\n</p>\n\n<p><b>Like</b></p> 		- Отобрать поля по похожести имени заданному шаблону\n				&quot;*&quot; - все (по-умолчанию)<br />\n				&quot;*name&quot; - только те, что заканчиваются на name и т.п.\n\n<h2>Примеры:</h2>\nотобрать все поля, кроме BLOB и binary (а так же скрытых и вычисляемых, т.к. они явно не разрешены). т.к. разделителей нет, слепится все в кучу:\n<pre>&lt;FL Types=&quot;bx&quot;&gt;{0}&lt;/FL&gt;</pre>\n\nотобрать первичные ключи и любые поля с типом дата и сформировать список через запятую:\n<pre>&lt;FL Types=&quot;PD&quot;&gt;{0}&lt;DL&gt;, &lt;/DL&gt;&lt;/FL&gt;</pre>\n\nотобрать только поля-флаги с типом дата, сделать список через запятую и перенос строки:\n<pre>&lt;FL Types=&quot;&amp;FD&quot;&gt;{0}&lt;DL&gt;, \n&lt;/DL&gt;&lt;/FL&gt; </pre>\n\nотобрать поля текстового типа заканчивающиеся на name (Fullname, FirstName и т.п.)\n<pre>&lt;FL Like=&quot;*name&quot; Types=&quot;S&quot;&gt;{0} &lt;/FL&gt;</pre>\n\nсформировать список внешних ссылок в виде [локальное поле] =&gt; [таблица куда ссылаемся].[поле на которое ссылаемся]\n<pre>&lt;FL Types=&quot;L&quot;&gt;{0} =&gt; {5}.{6}&lt;/FL&gt;</pre>\n\nсформировать список ссылок на эту таблицу из других\n<pre>&lt;FL Types=&quot;R&quot;&gt;\n	Обнаружена внешняя ссылка: {5}.{6} -&gt; [table_name].{0})\n&lt;/FL&gt; </pre>\n\n",
-			"file": "README.md",
-			"file_size": 9066,
-			"file_write_time": 130504094541618546,
-			"settings":
-			{
-				"buffer_size": 6424,
-				"line_ending": "Windows"
-			}
-		},
-		{
-			"file": "Template_ASP.txt",
-			"settings":
-			{
-				"buffer_size": 3549,
+				"buffer_size": 2261,
 				"line_ending": "Windows"
 			}
 		},
@@ -139,7 +112,39 @@
 			"file": "/C/temp/_WebForm4/Template_test.txt",
 			"settings":
 			{
-				"buffer_size": 112,
+				"buffer_size": 316,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "Template_spRetrieve.sql",
+			"settings":
+			{
+				"buffer_size": 2441,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "Template_ASMX.asmx",
+			"settings":
+			{
+				"buffer_size": 6983,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "Template_spUpdate.sql",
+			"settings":
+			{
+				"buffer_size": 3056,
+				"line_ending": "Windows"
+			}
+		},
+		{
+			"file": "Template_macros.txt",
+			"settings":
+			{
+				"buffer_size": 5135,
 				"line_ending": "Windows"
 			}
 		}
@@ -221,6 +226,22 @@
 	},
 	"file_history":
 	[
+		"/C/GitHub/WebForm4/Template_ASP_control.asp",
+		"/C/GitHub/WebForm4/makescript.ps1",
+		"/C/GitHub/WebForm4/Template_spRetrieve.txt",
+		"/C/GitHub/WebForm4/Template_PWP.ps1",
+		"/C/temp/_WebForm4/trash/Employee_control.asp",
+		"/C/GitHub/WebForm4/Template_ASP_control.txt",
+		"/C/GitHub/WebForm4/README.md",
+		"/C/GitHub/WebForm4/Template_ASP_model.txt",
+		"/C/temp/_WebForm4/trash/Roles.asp",
+		"/S/_srv/Roles.asp",
+		"/C/temp/_WebForm4/trash/Roles_view.asp",
+		"/C/GitHub/WebForm4/Template_ASP.txt",
+		"/C/GitHub/WebForm4/Template_ASP_view.txt",
+		"/C/GitHub/WebForm4/makescript.sublime-project",
+		"/C/GitHub/WebForm4/Template_macros.txt",
+		"/C/temp/_WebForm4/Template_test.txt",
 		"/C/Users/v.baginskiy/AppData/Roaming/Sublime Text 3/Packages/User/Github Tools.sublime-settings",
 		"/C/temp/_WebForm4/Template_spUpdate.txt",
 		"/C/temp/_WebForm4/Template_viewResolved.txt",
@@ -238,7 +259,6 @@
 		"/C/temp/_WebForm4/trash/Terror_spUpdate.sql",
 		"/C/temp/_WebForm4/Template_inc_SQL_grants.txt",
 		"/C/temp/_WebForm4/trash/test.aspx",
-		"/C/temp/_WebForm4/Template_test.txt",
 		"/C/temp/_WebForm4/WebForm_ASMX.txt",
 		"/C/temp/_WebForm4/Template_ASMX.txt",
 		"/C/temp/_WebForm4/trash/Roles_spInsert.sql",
@@ -338,6 +358,16 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"<IF",
+			"IFG",
+			"<IFG",
+			"<IFg",
+			"<IF",
+			"txt",
+			".AssignField [table_name]",
+			"true",
+			"Roles",
+			"RolesList",
 			"spRoles",
 			"-",
 			"true",
@@ -444,7 +474,7 @@
 	"groups":
 	[
 		{
-			"selected": 3,
+			"selected": 7,
 			"sheets":
 			[
 				{
@@ -473,7 +503,7 @@
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 7,
+					"stack_index": 8,
 					"type": "text"
 				},
 				{
@@ -503,7 +533,7 @@
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 6,
+					"stack_index": 7,
 					"type": "text"
 				},
 				{
@@ -532,7 +562,7 @@
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 5,
+					"stack_index": 6,
 					"type": "text"
 				},
 				{
@@ -541,15 +571,15 @@
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 1904,
+						"buffer_size": 2261,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								280,
-								280
+								63,
+								63
 							]
 						],
 						"settings":
@@ -560,24 +590,81 @@
 						"translation.y": 0.0,
 						"zoom_level": 1.0
 					},
-					"stack_index": 0,
+					"stack_index": 5,
 					"type": "text"
 				},
 				{
 					"buffer": 4,
-					"file": "Template_macros.txt",
+					"file": "/C/temp/_WebForm4/Template_test.txt",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 4570,
+						"buffer_size": 316,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								641,
-								641
+								92,
+								92
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Text/Plain text.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 3,
+					"type": "text"
+				},
+				{
+					"buffer": 5,
+					"file": "Template_spRetrieve.sql",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 2441,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								668,
+								668
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/SQL/SQL.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 2,
+					"type": "text"
+				},
+				{
+					"buffer": 6,
+					"file": "Template_ASMX.asmx",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 6983,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								1155,
+								1155
 							]
 						],
 						"settings":
@@ -586,93 +673,65 @@
 							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 2362.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 1,
 					"type": "text"
 				},
 				{
-					"buffer": 5,
-					"file": "README.md",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 6424,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								2438,
-								2438
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/HTML/HTML.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 405.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 2,
-					"type": "text"
-				},
-				{
-					"buffer": 6,
-					"file": "Template_ASP.txt",
-					"semi_transient": false,
-					"settings":
-					{
-						"buffer_size": 3549,
-						"regions":
-						{
-						},
-						"selection":
-						[
-							[
-								1858,
-								1858
-							]
-						],
-						"settings":
-						{
-							"syntax": "Packages/ASP/ASP.tmLanguage",
-							"translate_tabs_to_spaces": false
-						},
-						"translation.x": 0.0,
-						"translation.y": 368.0,
-						"zoom_level": 1.0
-					},
-					"stack_index": 3,
-					"type": "text"
-				},
-				{
 					"buffer": 7,
-					"file": "/C/temp/_WebForm4/Template_test.txt",
+					"file": "Template_spUpdate.sql",
 					"semi_transient": false,
 					"settings":
 					{
-						"buffer_size": 112,
+						"buffer_size": 3056,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								69,
-								69
+								0,
+								0
 							]
 						],
 						"settings":
 						{
-							"syntax": "Packages/HTML/HTML.tmLanguage"
+							"syntax": "Packages/SQL/SQL.tmLanguage",
+							"translate_tabs_to_spaces": false
 						},
 						"translation.x": 0.0,
-						"translation.y": 0.0,
+						"translation.y": 165.0,
+						"zoom_level": 1.0
+					},
+					"stack_index": 0,
+					"type": "text"
+				},
+				{
+					"buffer": 8,
+					"file": "Template_macros.txt",
+					"semi_transient": false,
+					"settings":
+					{
+						"buffer_size": 5135,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								674,
+								674
+							]
+						],
+						"settings":
+						{
+							"syntax": "Packages/Text/Plain text.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 75.0,
 						"zoom_level": 1.0
 					},
 					"stack_index": 4,
@@ -753,7 +812,7 @@
 	"show_open_files": false,
 	"show_tabs": true,
 	"side_bar_visible": true,
-	"side_bar_width": 150.0,
+	"side_bar_width": 205.0,
 	"status_bar_visible": true,
 	"template_settings":
 	{
