@@ -7,11 +7,11 @@ Code generator based on the database schema and templates
 Сформировать схему для таблицы:
 <pre>WFGenFields -Instance "SQLSERV01" -Database "MyTestDB" -TableName "TestTable" | ConvertTo-Json -Depth 3 | Out-File "table-schema.json"</pre>
 
-Сгенерировать скрипт по шаблону (развернуть макровставки):
+Сгенерировать скрипт из схемы по шаблону (развернуть макровставки):
 <pre>Get-Content "table-schema.json" -Raw | ConvertFrom-Json | ObjectToHash | WFMakeScript -Template C:\temp\_WebForm4\Template_AJAX.txt | Out-File "test-ajax.html"</pre>
 
 Сгенерировать набор скриптов в соответствии с конфигурационным файлом makescript.json:
-<pre>{WFMakeAllScripts -columns "table-schema.json" -target_dir "trash"</pre>
+<pre>WFMakeAllScripts -columns "table-schema.json" -target_dir "trash"</pre>
 
 Пример конфигурационного файла makescript.json:
 <pre>{
@@ -54,9 +54,11 @@ Code generator based on the database schema and templates
 <p><b>&lt;IF expression&gt;true-section[ELSE]false-section&lt;/IF&gt;</b> - проверяет условие и вставляет блок</p><br/>
 expression:			- набор аттрибутов определяющих условия (если несколько, то совпасть должны все)<br/>
 	FE="FieldName"  - наличие заданного поля в таблице<br/>
-	FS="gt 1024"	- сравнение длины поля (gt, lt, eq, ne, qe, le). (работает только внутри &lt;FL&gt; блока)<br/>
-	FT="String"		- тип поля (String, Datetime, Int, Int64, Byte, Float,...). (работает только внутри &lt;FL&gt; блока)<br/>
 	FL="N" 			- флаг поля. если перечислено несколько флагов, то обязательно совпадение всех. (работает только внутри &lt;FL&gt; блока)<br/>
+	FC="{param} -gt 1024"	- посчитать условие с параметром param, поддерживаются -gt, -lt, -eq, -ne, -qe, -le, скобки, арифметика, ..., (работает только внутри <FL> блока). Пример:<br />
+			FC="{9} -gt 32" - размер поля > 32 , <br />
+			FC='{3} -eq "String"' - тип поля совместим со String , <br />
+	NULLABLE="true"	- сравнение со свойством поля Nullable (т.е. может ли иметь пустое значение)<br />
 [ELSE]				- разделитель ветвления, до [ELSE] работает если expression = true, после [ELSE] если expression = false<br/>
 </p>
 
@@ -71,7 +73,8 @@ expression:			- набор аттрибутов определяющих усл�
 {5} - Lookup Table
 {6} - Lookup table key field
 {7} - Field number
-{8} - Referenced table primary key (for R filter)</pre></p>
+{8} - Referenced table primary key (for R filter)
+{9} - Data size (Max input length of form elements)</pre></p>
 
 <p><b>FL,DL tags atributes (params):</b></p>
 

@@ -1,86 +1,104 @@
 {
 "WS": {
 	"name": "ws{0}.asmx",
-	"template": "Template_ASMX.txt",
-	"enable": "false",
+	"template": "Template_ASMX.asmx",
+	"enable": "true",
 	"params": { }
 	},
 "AJAX": {
 	"name": "{0}.html",
-	"template": "Template_AJAX.txt",
-	"enable": "false",
+	"template": "Template_AJAX.html",
+	"enable": "true",
 	"params": { }
 	},
 "PowerWebPart": {
 	"name": "{0}.pwp",
-	"template": "Template_PWP.txt",
+	"template": "Template_PWP.ps1",
 	"enable": "false",
 	"params": { }
 	},
 "funcAccess": {
 	"name": "{0}_funcAccess.sql",
-	"template": "Template_funcAccess.txt",
+	"template": "Template_funcAccess.sql",
 	"enable": "false",
 	"params": { "sp_create_mode": "ALTER" }
 	},
 "viewAccess": {
 	"name": "{0}_viewAccess.sql",
-	"template": "Template_viewAccess.txt",
+	"template": "Template_viewAccess.sql",
 	"enable": "false",
 	"params": { "sp_create_mode": "ALTER" }
 	},
 "viewMain": {
 	"name": "{0}_viewMain.sql",
-	"template": "Template_viewMain.txt",
+	"template": "Template_viewMain.sql",
 	"enable": "false",
 	"params": { "sp_create_mode": "ALTER" }
 	},
 "viewResolved": {
 	"name": "{0}_viewResolved.sql",
-	"template": "Template_viewResolved.txt",
+	"template": "Template_viewResolved.sql",
 	"enable": "false",
 	"params": { "sp_create_mode": "ALTER" }
 	},
 "SPSelect": {
 	"name": "{0}_spSelect.sql",
-	"template": "Template_spSelect.txt",
+	"template": "Template_spSelect.sql",
 	"enable": "false",
 	"params": { "sp_create_mode": "ALTER" }
 	},
 "SPRetrieve": {
 	"name": "{0}_spRetrieve.sql",
-	"template": "Template_spRetrieve.txt",
-	"enable": "false",
+	"template": "Template_spRetrieve.sql",
+	"enable": "true",
 	"params": { "sp_create_mode": "ALTER" }
 	},
 "SPInsert": {
 	"name": "{0}_spInsert.sql",
-	"template": "Template_spInsert.txt",
+	"template": "Template_spInsert.sql",
 	"enable": "false",
 	"params": { "sp_create_mode": "ALTER" }
 	},
 "SPUpdate": {
 	"name": "{0}_spUpdate.sql",
-	"template": "Template_spUpdate.txt",
+	"template": "Template_spUpdate.sql",
 	"enable": "false",
 	"params": { "sp_create_mode": "ALTER" }
 	},
 "SPDelete": {
 	"name": "{0}_spDelete.sql",
-	"template": "Template_spDelete.txt",
+	"template": "Template_spDelete.sql",
 	"enable": "false",
 	"params": { "sp_create_mode": "ALTER" }
 	},
 "SPMain": {
 	"name": "{0}_spMain.sql",
-	"template": "Template_spMain.txt",
+	"template": "Template_spMain.sql",
 	"enable": "false",
 	"params": { "sp_create_mode": "ALTER" }
 	},
+"ASPmodel": {
+	"name": "{0}_model.asp",
+	"template": "Template_ASP_model.asp",
+	"enable": "false",
+	"params": { }
+	},
+"ASPcontrol": {
+	"name": "{0}_control.asp",
+	"template": "Template_ASP_control.asp",
+	"enable": "false",
+	"params": { }
+	},
+"ASPview": {
+	"name": "{0}_view.asp",
+	"template": "Template_ASP_view.asp",
+	"enable": "false",
+	"params": { }
+	},
 "ASP": {
 	"name": "{0}.asp",
-	"template": "Template_ASP.txt",
-	"enable": "true",
+	"template": "Template_ASP.asp",
+	"enable": "false",
 	"params": { }
 	}
 }
