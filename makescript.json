@@ -14,7 +14,7 @@
 "PowerWebPart": {
 	"name": "{0}.pwp",
 	"template": "Template_PWP.ps1",
-	"enable": "false",
+	"enable": "true",
 	"params": { }
 	},
 "funcAccess": {
@@ -32,7 +32,7 @@
 "viewMain": {
 	"name": "{0}_viewMain.sql",
 	"template": "Template_viewMain.sql",
-	"enable": "true",
+	"enable": "false",
 	"params": { "sp_create_mode": "ALTER" }
 	},
 "viewResolved": {

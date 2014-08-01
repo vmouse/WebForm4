@@ -1,9 +1,13 @@
-﻿$DBInstanceKey="#Instance#" # в конфиг через этот элемент передаются параметры базы данных
-$DBRefKey="#References#" # в конфиге под этим ключом живут ссылки на текущую таблицу 
+﻿# Metaprog scripts, (c) Vladislav Baginsky, 2002-2014. vlad@baginsky.com
+
+# Constants:
+$DBInstanceKey="#Instance#" 
+$DBRefKey="#References#" 
 $SelectName = "SelectName"
 $SelectShortName = "SelectShortName"
 $TemplateFileFormat = "Template_{0}.txt"
 
+# Datatypes convertor
 $SQLtypes = @{ # SQLdecl = format max {0} - type, {1} - size, {2} - precision, {3} - scale
 	"uniqueidentifier" = @{ "Flag"="G"; "C#" = "Guid"; "C#N" = "Guid?"; "SQLdecl" = "{0}" };
 	"varchar" = @{ "Flag"="S"; "C#" = "String"; "C#N" = "String"; "SQLdecl" = "{0}({1})"};
@@ -30,6 +34,7 @@ $SQLtypes = @{ # SQLdecl = format max {0} - type, {1} - size, {2} - precision, {
 	"timestamp"=@{ "Flag"="X"; "C#" = "Int64"; "C#N" = "Int64?"; "SQLdecl" = "bigint"};
 }
 
+# System fields
 $sys_fields = @{
 	"fl_created" = @{"RW"=0; "Flag"="H" };
 	"fl_changed" = @{"RW"=1; "Flag"="H" };
@@ -57,7 +62,7 @@ function SG($hash, $field, $default = $null) {
 	} else { return $default }
 }
 
-#Store all object properties into hash array
+# Store all object properties into hash array
 function ObjectToHash {
 Param(
   [Parameter(ValueFromPipeline=$true)]
@@ -78,6 +83,7 @@ Param(
 	}
 }
 
+# Generate table schema
 function WFGenFields{
 [CmdletBinding()]
 Param(
@@ -213,12 +219,10 @@ Param(
 
 	While ( $rdr.Read() ) {
 		if ([string]::IsNullOrEmpty($rdr["LocCol"]) -ne $true) {
-	#		$columns[$DBRefKey]+=@{ "Table"=$rdr["RefTable"]; "Column"=$rdr["RefCol"]; "LocCol"=$rdr["LocCol"] }
 			$agrcolname = ("{0}.{1}" -f $rdr["RefTable"],$rdr["RefCol"])
 			$columns[$agrcolname]=[ordered]@{}
 			$columns[$agrcolname]["Description"]="Link {0}.{1} -> {2}.{3}" -f $rdr["RefTable"],$rdr["RefCol"],$TableName,$rdr["LocCol"]
-			
-			$columns[$agrcolname]["Number"]=$colnum # возможно надо проставлять номер локального поля
+			$columns[$agrcolname]["Number"]=$colnum # возможно надо проставлять номер поля из БД?
 			$columns[$agrcolname]["Type"]=$columns[$rdr["LocCol"]]["Type"]
 			$columns[$agrcolname]["TypeDecl"]=$columns[$rdr["LocCol"]]["TypeDecl"]
 			$columns[$agrcolname]["Size"]=$columns[$rdr["LocCol"]]["Size"]
@@ -239,8 +243,7 @@ Param(
 	if (-not (Test-Path $Tunes)) {
 		$TuneParams = @{}
 		$names = $colums
-		# parse names
-
+		# find title fields
 		$TuneParams["SelectName"]=$title_fields
 		if ($columns.Keys -contains "fl_deleted") { $TuneParams["SelectName"]+=" + CASE WHEN fl_deleted IS NOT NULL THEN ' (X)' ELSE '' END" }
 		$TuneParams["SelectShortName"]=$title_fields
@@ -434,14 +437,14 @@ function ParseFieldList($tag, $can_continue) {
 		$continue = ((-not [string]::IsNullOrEmpty($field_list)) -or ($can_continue -and ($fl_filter -contains "<")))
 		if ($continue) {
 #			$field_list += $dl_parsed
-			$field_list += ($dl_val -f $params)
+			$field_list += (($dl_val -replace "\W}","$&}" -replace "{\D","{$&") -f $params)
 		}
 		try {
-			$field_list += ($fl_parsed -f $params)
+			$field_list += (($fl_parsed -replace "\W}","$&}" -replace "{\D","{$&") -f $params)
 #			$dl_parsed = ($dl_val -f $params)
 		} catch {
 			Write-Host "`n`nError in template: $Template"
-			Write-Host "Look  entry of <FL> block: " + $fl
+			Write-Host ("Look  entry of <FL> block: " + $fl_parsed)
 		}
 	}
 

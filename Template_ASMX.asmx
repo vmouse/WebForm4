@@ -1,7 +1,7 @@
 <%@ WebService Language="C#" Class="ws[table_name]" %>
 //[webform_version]
 //Powershell connect:
-//$srv = New-WebServiceProxy -uri "http://support/_srv/[table_name].asmx?wsdl" -UseDefaultCredential
+//$srv = New-WebServiceProxy -uri "http://support/_srv/ws[table_name].asmx?wsdl" -UseDefaultCredential
 //$srv.Exec(3,2,<FL>$null<DL>, </DL></FL>)
 using System;
 using System.Data;
@@ -26,15 +26,15 @@ public class ws[table_name] : System.Web.Services.WebService
 {
 	[Serializable]
 	public class it[table_name]
-	{
-		<FL Types="AVH">public {4} {0};<DL>
+	{<AL>
+		<FL Types="AVH">public [v]{4} [v]{0};<DL>
 		</DL></FL>
-	public it[table_name]() {} // default constructor
-		public void Save() {
+	</AL>public it[table_name]() {} // default constructor
+		public void Save() {<AL>
 			it[table_name] item = Go(1, 0, <FL>{0}<DL>, </DL></FL>).ToArray()[0];
-			<FL Types="AVH">{0} = item.{0};<DL>
+			<FL Types="AVH">{0}[v] = item.{0};<DL>
 			</DL></FL>
-		}
+		}</AL>
 		public void Delete(int SubMode) {
 			Go(2, SubMode, <FL>{0}<DL>, </DL></FL>);
 		}
@@ -101,7 +101,7 @@ public class ws[table_name] : System.Web.Services.WebService
 
 	
 	[WebMethod]
-	public itTerror_name[] Find(String SearchToken, int PageNumber, int RowsPerPage)
+	public it[table_name]_name[] Find(String SearchToken, int PageNumber, int RowsPerPage)
 	{
 		// (string.IsNullOrEmpty(SearchToken))?null:"%" + SearchToken + "%"
 		return Retrieve(0, 
@@ -117,6 +117,14 @@ public class ws[table_name] : System.Web.Services.WebService
 		return Go(3, 0, <FL Types="P">{0}<DL>, </DL></FL>, <FL Types="p">null<DL>, </DL></FL>).FirstOrDefault();
 	}
 
+	<FL Types="B">
+	[WebMethod]
+	public Byte[] GetBLOB_{0}(<FL Types="P">{3} {0}<DL>, </DL></FL>)
+	{
+		it[table_name] item = Go(3, 0, <FL Types="P">{0}<DL>, </DL></FL>, <FL Types="p">null<DL>, </DL></FL>).FirstOrDefault();
+		return item.{0};
+	}
+</FL>
 	[WebMethod]
 	public it[table_name][] Exec(int Mode, int SubMode, <FL>{4} {0}<DL>, </DL></FL>)
 	{
@@ -134,24 +142,28 @@ public class ws[table_name] : System.Web.Services.WebService
 	{
 		SqlCommand Command = new SqlCommand(ProcName, Connection);
 		Command.CommandType = CommandType.StoredProcedure;
-		SqlCommandBuilder.DeriveParameters(Command);
-		<FL Types="s">Command.Parameters["@{0}"].Value = {0};<DL>
+		SqlCommandBuilder.DeriveParameters(Command);<AL>
+		<FL Types="s">Command.Parameters["@{0}"].Value[v] = {0};<DL>
 		</DL></FL>
-		<FL Types="S">Command.Parameters["@{0}"].Value = (string.IsNullOrEmpty({0}))?null:{0};<DL>
-		</DL></FL>
+		<FL Types="S">Command.Parameters["@{0}"].Value[v] = (string.IsNullOrEmpty({0}))?[v]null:{0};<DL>
+		</DL></FL></AL>
 		return Command;
 	}
 
-	public static List<itTerror> FillListFromReader(SqlDataReader Reader)
+	public static List<it[table_name]> FillListFromReader(SqlDataReader Reader, bool WithBLOBs)
 	{
-		List<itTerror> rec = new List<itTerror>();
+		List<it[table_name]> rec = new List<it[table_name]>();
 		var cols = Reader.GetSchemaTable().Rows.Cast<DataRow>().Select(row => row["ColumnName"] as String).ToList();
 		while (Reader.Read())
 		{
 			it[table_name] item = new it[table_name]();
-			// get data with check for field exists and null value
-			<FL Types="AVH">item.{0} = ({4})SafeDRValue(Reader,"{0}", cols);<DL>
-			</DL></FL>              
+			<AL>// get data with check for field exists and null value
+			<FL Types="AVHb">item.{0}[v] = ({4})[v]SafeDRValue(Reader,"{0}", cols);<DL>
+			</DL></FL>
+			if (WithBLOBs) {
+				<FL Types="B">item.{0}[v] = ({4})[v]SafeDRValue(Reader,"{0}", cols);<DL>
+				</DL></FL>
+			}</AL>
 			rec.Add(item);
 		}
 		return rec;
@@ -173,7 +185,7 @@ public class ws[table_name] : System.Web.Services.WebService
 					Command.Parameters["@Mode"].Value = Mode;
 					Command.Parameters["@SubMode"].Value = SubMode;
 					SqlDataReader Reader = Command.ExecuteReader();
-					if (Reader.HasRows) Results = FillListFromReader(Reader);
+					if (Reader.HasRows) Results = FillListFromReader(Reader, (Mode==3 && SubMode==0));
 				}
 			}
 		}
@@ -205,7 +217,7 @@ public class ws[table_name] : System.Web.Services.WebService
 					Command.Parameters["@PageNumber"].Value = PageNumber;
 					Command.Parameters["@RowsPerPage"].Value = RowsPerPage;
 					SqlDataReader Reader = Command.ExecuteReader();
-					if (Reader.HasRows) Results = FillListFromReader(Reader);
+					if (Reader.HasRows) Results = FillListFromReader(Reader, false);
 				}
 			}
 		}
