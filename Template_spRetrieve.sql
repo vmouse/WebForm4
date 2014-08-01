@@ -17,13 +17,13 @@ IF @RowsPerPage<1
 IF @SubMode=0 -- Filling lookup controls. Ranged by RowsPerPage items from @PageNumber
 BEGIN<AL>
 	SELECT * FROM (
-	SELECT <FL Types="PV">{0}<DL>, </DL></FL>, ROW_NUMBER() OVER(ORDER BY SelectName) AS NUMBER
-	FROM view[table_name]
-	WHERE [v]<FL Types="svfpb">(({0} [v]= [v]@{0}) [v]OR (@{0} [v]is NULL))<DL> AND
-		[v]</DL></FL>[v]<FL Types="Svfp<">(({0} [v]LIKE [v]@{0}) [v]OR (@{0} [v]is NULL))<DL> AND
-		[v]</DL></FL><IF FE="fl_deleted"> AND
-		[v]((fl_deleted is NULL) OR (fl_admin_access = 1) OR (<FL Types="P">{0}=@{0}<DL> AND </DL></FL>))</IF>
-	) t1
+		SELECT <FL Types="PV">{0}<DL>, </DL></FL>, ROW_NUMBER() OVER(ORDER BY SelectName) AS NUMBER
+		FROM view[table_name]
+		WHERE (<FL Types="svfpb">[v]( {0} [v]= [v]@{0} [v])<DL> OR 
+			</DL></FL><FL Types="Svfp<">[v]( {0} [v]LIKE [v]@{0} [v])<DL> OR 
+			</DL></FL>)<IF FE="fl_deleted"> [v]AND
+			  (( fl_deleted is NULL) OR (fl_admin_access = 1) OR (<FL Types="P">{0}=@{0}<DL> AND </DL></FL>))</IF>
+		) t1
 	WHERE (NUMBER > @PageNumber * @RowsPerPage) AND (NUMBER <= ((@PageNumber+1) * @RowsPerPage))
 	ORDER BY <FL Types="V">{0}<DL>, </DL></FL></AL>
 END

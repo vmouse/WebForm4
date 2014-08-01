@@ -2,19 +2,19 @@
 "WS": {
 	"name": "ws{0}.asmx",
 	"template": "Template_ASMX.asmx",
-	"enable": "false",
+	"enable": "true",
 	"params": { }
 	},
 "AJAX": {
 	"name": "{0}.html",
 	"template": "Template_AJAX.html",
-	"enable": "false",
+	"enable": "true",
 	"params": { }
 	},
 "PowerWebPart": {
 	"name": "{0}.pwp",
 	"template": "Template_PWP.ps1",
-	"enable": "true",
+	"enable": "false",
 	"params": { }
 	},
 "funcAccess": {
@@ -50,7 +50,7 @@
 "SPRetrieve": {
 	"name": "{0}_spRetrieve.sql",
 	"template": "Template_spRetrieve.sql",
-	"enable": "false",
+	"enable": "true",
 	"params": { "sp_create_mode": "ALTER" }
 	},
 "SPInsert": {

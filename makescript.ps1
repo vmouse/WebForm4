@@ -302,7 +302,7 @@ function FillParams($col) {
 #   для массива полей нужно что бы условия сработали хотя бы для одного поля
 # $prevresuls - результат срабатывания предыдущего условия (для возможности соединения с ELIF)
 function ParseIFMacros($iftype="IF", $text, $col, $prevresult=$false) {
-	$reg_if = [regex]"(?sim)<($iftype|EL$iftype)\s*?(.*?)>(.*?)(?:\[ELSE\](.*?)<\/\1>|</\1>)"
+	$reg_if = [regex]"(?sim)<($iftype|EL$iftype)(?:\s+(.*?)>|>)(.*?)(?:\[ELSE\](.*?)<\/\1>|</\1>)"
 	$reg_opt= [regex]"(?sim)(\w+)\s*=\s*(?:(([""'])([^\3]+?)\3)|([^\s^>]*))"
 	if ($col -is [Hashtable]) { $col = $col.Keys }
 	$if = $reg_if.Match($text)	
@@ -494,7 +494,11 @@ Param(
 	$Database = $columns[$DBInstanceKey]["Database"]
 	$table_name= $columns[$DBInstanceKey]["Table"]
 	if ($Tunes.GetType().Name -eq "String") {
-		$TuneParams = Get-Content $Tunes -Raw | ConvertFrom-Json | ObjectToHash -MaxDeep 1
+		if ([string]::IsNullOrEmpty($Tunes)) {
+			$TuneParams = @{}
+		} else {
+			$TuneParams = Get-Content $Tunes -Raw | ConvertFrom-Json | ObjectToHash -MaxDeep 1
+		}
 	} else { $TuneParams = $Tunes }
 
 	$OutFile = ($OutFile -f $table_name)

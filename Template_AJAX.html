@@ -50,7 +50,7 @@
 				},
 				data: function (search_str, page, context) { // context is paging token with next id 
 					return JSON.stringify({
-					SubMode: 1,
+					SubMode: 0,
 					PageNumber: page-1,
 					RowsPerPage: rows_per_page,
 					SearchToken: search_str || null
@@ -66,7 +66,8 @@
 		$("#select_[table_name]").on("change", function (ev) { 
 			$.postJSON("/_srv/ws[table_name].asmx/Get", {
 				<FL Types="P">{0}: ev.val<DL>,
-				</DL></FL>
+				</DL></FL>, 
+				WithBLOBs: false
 			}, function (records) {
 					$.each(records.d, function (key, val) {
 						if (!! $("#"+key).length) {
