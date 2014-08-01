@@ -115,4 +115,4 @@ EXEC dbo.spEvent @EventName, @P1, @P2, @P3, @SelName
 RETURN @RETURN_RESULT
 GO
 
-[include:Template_inc_SQL_grants.txt]
+[include:Template_inc_SQL_grants.sql]

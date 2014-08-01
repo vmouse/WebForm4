@@ -79,4 +79,4 @@ GO
 GRANT EXEC ON dbo.sp[table_name] TO public
 GO
 
-[include:Template_inc_SQL_grants.txt]
+[include:Template_inc_SQL_grants.sql]

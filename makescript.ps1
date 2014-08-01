@@ -22,12 +22,12 @@ $SQLtypes = @{ # SQLdecl = format max {0} - type, {1} - size, {2} - precision, {
 	"smallDateTime" =@{ "Flag"="D"; "C#" = "DateTime";"C#N"= "DateTime?"; "SQLdecl" = "{0}"};
 	"time"		=@{ "Flag"="D"; "C#" = "DateTime";"C#N"= "DateTime?"; "SQLdecl" = "{0}"};
 	"Date"		=@{ "Flag"="D"; "C#" = "DateTime";"C#N"= "DateTime?"; "SQLdecl" = "{0}"};
-	"image" = 	@{ "Flag"="B"; "C#" = "BinaryStream"; "C#N" = "BinaryStream"; "SQLdecl" = "{0}"};
-	"text" = 	@{ "Flag"="B"; "C#" = "BinaryStream"; "C#N" = "BinaryStream"; "SQLdecl" = "{0}"};
-	"ntext" = 	@{ "Flag"="B"; "C#" = "BinaryStream"; "C#N" = "BinaryStream"; "SQLdecl" = "{0}"};
-	"xml" = 	@{ "Flag"="B"; "C#" = "BinaryStream"; "C#N" = "BinaryStream"; "SQLdecl" = "{0}"};
-	"binary" = 	@{ "Flag"="B"; "C#" = "BinaryStream"; "C#N" = "BinaryStream"; "SQLdecl" = "{0}"};
-	"timestamp"=@{ "Flag"="X"; "C#" = "BinaryStream"; "C#N" = "BinaryStream"; "SQLdecl" = "{0}"};
+	"image" = 	@{ "Flag"="B"; "C#" = "Byte[]"; "C#N" = "Byte[]"; "SQLdecl" = "{0}"};
+	"text" = 	@{ "Flag"="B"; "C#" = "Byte[]"; "C#N" = "Byte[]"; "SQLdecl" = "{0}"};
+	"ntext" = 	@{ "Flag"="B"; "C#" = "Byte[]"; "C#N" = "Byte[]"; "SQLdecl" = "{0}"};
+	"xml" = 	@{ "Flag"="B"; "C#" = "Byte[]"; "C#N" = "Byte[]"; "SQLdecl" = "{0}"};
+	"binary" = 	@{ "Flag"="B"; "C#" = "Byte[]"; "C#N" = "Byte[]"; "SQLdecl" = "{0}"};
+	"timestamp"=@{ "Flag"="X"; "C#" = "Int64"; "C#N" = "Int64?"; "SQLdecl" = "bigint"};
 }
 
 $sys_fields = @{
@@ -86,13 +86,16 @@ Param(
   [Parameter(Mandatory=$False,Position=1)]
    [string]$Database,
   [Parameter(Mandatory=$False,Position=2)]
-   [string]$TableName
+   [string]$TableName,
+  [Parameter(Mandatory=$False,Position=2)]
+   [string]$Tunes
 )
 	$columns = [ordered]@{}
 	$columns[$DBInstanceKey] = @{}
 	$columns[$DBInstanceKey]["Name"]=$Instance
 	$columns[$DBInstanceKey]["Database"] = $Database
 	$columns[$DBInstanceKey]["Table"] = $TableName
+	$columns[$DBInstanceKey]["Tunes"] = $Tunes
 
 	[Reflection.Assembly]::LoadWithPartialName("Microsoft.SqlServer.Smo") | Out-Null
 	#[Reflection.Assembly]::LoadWithPartialName("Microsoft.SqlServer.ConnectionInfo")
@@ -120,7 +123,7 @@ Param(
 		}
 	}
 
-	$colnum = 1
+	$colnum = 1; $title_fields = ""; $pk_field = ""
 	Write-Host -ForegroundColor Red "Columns:"
 	$table.Columns | where {-not $_.Computed} | foreach {
 		$col = $_
@@ -128,7 +131,7 @@ Param(
 		$columns[$col.Name]["Description"]=($col.ExtendedProperties | ? { $_.Name -eq "MS_Description" }).Value
 		$columns[$col.Name]["Number"]=$colnum
 		$columns[$col.Name]["Type"]=$col.DataType.Name
-		$columns[$col.Name]["TypeDecl"]=$col.DataType.Name
+		$columns[$col.Name]["TypeDecl"]=($SQLtypes[$col.DataType.Name]["SQLdecl"] -f $col.DataType.Name, $col.DataType.MaximumLength, $col.DataType.NumericPrecision, $col.DataType.NumericScale)
 		$columns[$col.Name]["Size"]=$col.DataType.MaximumLength
 		$columns[$col.Name]["NumPrecision"]=$col.DataType.NumericPrecision
 		$columns[$col.Name]["NumScale"]=$col.DataType.NumericScale
@@ -148,8 +151,19 @@ Param(
 			(IIF -q (SG -hash $foreign[$col.Name] -field "Tree" -default "") -y "T")
 		$columns[$col.Name]["RW"]=SG -hash $sys_fields[$col.Name] -field "RW" -default "1"
 		write-host -ForegroundColor DarkBlue ("{0} 	{1}({2}) {3} Flags: {4}" -f $col.Name, $col.DataType.Name, $col.DataType.MaximumLength, $col.DataType.SqlDataType, $columns[$col.Name]["Flag"])
+		
+		if (($col.Name -like "*name") -and ([Char[]]$columns[$col.Name]["Flag"] -contains "S")) {
+			if (-not [string]::IsNullOrEmpty($title_fields)) { $title_fields+=" + ' ' + " }
+			$title_fields += "ISNULL("+$col.Name+", '')"
+		}
+		
+		if ($col.InPrimaryKey -and [string]::IsNullOrEmpty($pk_field)) { $pk_field = $col.Name }
 
 		$colnum++
+	}
+
+	if ([string]::IsNullOrEmpty($title_fields)) {
+		$title_fields = "CONVERT(varchar,{0},64)" -f $pk_field
 	}
 
 	$virtual_fields.Keys | foreach {
@@ -222,6 +236,17 @@ Param(
 	$rdr.Close()
 	$con.Close()
 
+	if (-not (Test-Path $Tunes)) {
+		$TuneParams = @{}
+		$names = $colums
+		# parse names
+
+		$TuneParams["SelectName"]=$title_fields
+		if ($columns.Keys -contains "fl_deleted") { $TuneParams["SelectName"]+=" + CASE WHEN fl_deleted IS NOT NULL THEN ' (X)' ELSE '' END" }
+		$TuneParams["SelectShortName"]=$title_fields
+		$TuneParams | ConvertTo-Json -Depth 3 | foreach { $_.Replace("\u0027","'") } | Out-File -Encoding UTF8 $Tunes
+	}	
+
 	$columns
 }
 
@@ -256,7 +281,7 @@ function VerticalAlign($block, [char]$align_char, [int]$tabsize=4) {
 function FillParams($col) {
 	$params = @((IIF -q ([Char[]]$columns[$col]["Flag"] -contains "R") -y $columns[$col]["FKLocalKey"] -n $col); 
 		ISNULL -e $columns[$col]["Description"] -ifnull $col;
-		($SQLtypes[$columns[$col]["Type"]]["SQLdecl"] -f $columns[$col]["Type"], $columns[$col]["Size"], $columns[$col]["NumPrecision"], $columns[$col]["NumScale"]);
+		$columns[$col]["TypeDecl"];
 		$SQLtypes[$columns[$col]["Type"]]["C#"]; 
 		$SQLtypes[$columns[$col]["Type"]]["C#N"];
 		ISNULL -e $columns[$col]["FKTable"] -ifnull "";
@@ -305,6 +330,7 @@ function ParseIFMacros($iftype="IF", $text, $col, $prevresult=$false) {
 						if ($val -notcontains "H") {	$val+="h" }# прячем скрытые поля
 						if ($val -notcontains "V") {	$val+="v" }# прячем вычисляемые поля (SelectName)
 						if ($val -notcontains "R") {	$val+="r" }# прячем внешние ссылки на эту таблицу
+#						if ($val -notcontains "B") {	$val+="b" }# прячем BLOB-поля, т.к. как правило их надо обрабатывать отдельно
 						foreach ($ch in $val) {
 							if ([char]::IsLower($ch)) {
 								$result = $result -and ([Char[]]$columns[$colitem]["Flag"] -notcontains $ch)
@@ -379,6 +405,7 @@ function ParseFieldList($tag, $can_continue) {
 	if ($fl_filter -notcontains "H") {	$fl_filter+="h" }# прячем скрытые поля
 	if ($fl_filter -notcontains "V") {	$fl_filter+="v" }# прячем вычисляемые поля (SelectName)
 	if ($fl_filter -notcontains "R") {	$fl_filter+="r" }# прячем внешние ссылки на эту таблицу
+#	if ($fl_filter -notcontains "B") {	$fl_filter+="b" }# прячем BLOB-поля, т.к. как правило их надо обрабатывать отдельно
 	
 	if ($fl_filter -contains "&") { # фильтр обязательного совпадения всех указанных флагов
 		$fl_filter = $fl_filter -ne "&"
@@ -455,12 +482,17 @@ Param(
   [Parameter(Mandatory=$False)]
   [string]$OutFile, # может быть шаблоном, куда вставится имя таблицы нулевым параметром
   [Parameter(Mandatory=$False)]
-  $ConfigParams  # хэш различных доп.параметров
+  [string]$Tunes,   # индивидуальные настройки для этой таблицы (либо хэш, либо имя файла json)
+  [Parameter(Mandatory=$False)]
+  $ConfigParams  # хэш доп.параметров шаблона
 )
 
 	$Instance = $columns[$DBInstanceKey]["Name"]
 	$Database = $columns[$DBInstanceKey]["Database"]
 	$table_name= $columns[$DBInstanceKey]["Table"]
+	if ($Tunes.GetType().Name -eq "String") {
+		$TuneParams = Get-Content $Tunes -Raw | ConvertFrom-Json | ObjectToHash -MaxDeep 1
+	} else { $TuneParams = $Tunes }
 
 	$OutFile = ($OutFile -f $table_name)
 	Write-Host "Creating $OutFile from template: $Template"
@@ -468,17 +500,28 @@ Param(
 	$out = [Io.File]::ReadAllText($Template)
 	while ($out -match  "\[include:(.+?)\]") {
 		$incfile = $Matches[1]
-		
 		if ($incfile.IndexOf("\") -lt 0) { $incfile = (pwd).ToString() + "\$incfile"}
 		$out = $out.Replace($Matches[0], [Io.File]::ReadAllText($incfile))
 	}
 	$out = $out -replace "\[webform_version\]", ("Created "+[datetime]::Now.ToString("yyyy-MM-dd hh:mm")+" by ASP-WEB Form generator, ver: 4.0.0.1, Powershell Edition. (c) Vladislav Baginsky (vlad@baginsky.com), 2002-2014")
 	$out = $out -replace "\[table_name\]", $table_name
-	if (($out -match  "\[param:(.+?)\]") -and ($ConfigParams -ne $null)) {
+	while (($out -match  "\[param:(.+?)\]") -and ($ConfigParams -ne $null)) {
 		$out = $out.Replace($Matches[0], $ConfigParams[$Matches[1]])
+	}
+	while (($out -match  "\[tune:(.+?)\]") -and ($ConfigParams -ne $null)) {
+		$out = $out.Replace($Matches[0], $TuneParams[$Matches[1]])
 	}
 
 	$out = (ParseIFMacros -iftype "IF" -text $out -col $columns)["text"]
+
+	# parse [pk]
+	$pk = $columns.keys | where {($DBInstanceKey, $DBRefKey) -notcontains $_} | where { [Char[]]$columns[$_]["Flag"] -contains "P" }
+	if ($out -match "\[pk\]") {
+		if (($pk.count -gt 1) -or ($pk -eq $null)) {
+			throw "Single-field Primary key need!"
+		}
+		$out = $out -replace "\[pk\]", $pk
+	}
 
 	$reg_fl = "(?sim).*(<FL\s*?(.*?)>(.*?)<\/FL>)" 
 	$reg_fl_end = "(?sim).*?</FL>" # паттерн вылавливания первого конца тэга FL (нужно для возможности вложенного поиска)
@@ -506,13 +549,13 @@ Param(
 		$al = $reg_align.Match($out)
 	}
 
-	
 	if ($OutFile.Length -gt 0) {
 		$out | Out-File -LiteralPath $OutFile -Encoding utf8
 	} else { 
 		$out
 	}
 }	
+
 function WFMakeAllScripts{
 [CmdletBinding()]
 Param(
@@ -530,7 +573,8 @@ Param(
 	$conf.Keys | where { $conf[$_]["enable"] -eq $true } | foreach {
 		$name 	  = $conf[$_]["name"]
 		$template = $conf[$_]["template"]
-		$params = $conf[$_]["params"]		
-		$columns | WFMakeScript -Template "$curdir\$template" -OutFile "$target_dir\$name" -ConfigParams $params
+		$params = $conf[$_]["params"]
+		$tunes = $columns[$DBInstanceKey]["Tunes"]
+		$columns | WFMakeScript -Template "$curdir\$template" -Tunes $tunes -OutFile "$target_dir\$name" -ConfigParams $params
 	}
 }

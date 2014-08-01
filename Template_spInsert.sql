@@ -44,4 +44,4 @@ RETURN 0
 
 GO
 
-[include:Template_inc_SQL_grants.txt]
+[include:Template_inc_SQL_grants.sql]

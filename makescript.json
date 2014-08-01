@@ -2,13 +2,13 @@
 "WS": {
 	"name": "ws{0}.asmx",
 	"template": "Template_ASMX.asmx",
-	"enable": "true",
+	"enable": "false",
 	"params": { }
 	},
 "AJAX": {
 	"name": "{0}.html",
 	"template": "Template_AJAX.html",
-	"enable": "true",
+	"enable": "false",
 	"params": { }
 	},
 "PowerWebPart": {
@@ -32,7 +32,7 @@
 "viewMain": {
 	"name": "{0}_viewMain.sql",
 	"template": "Template_viewMain.sql",
-	"enable": "false",
+	"enable": "true",
 	"params": { "sp_create_mode": "ALTER" }
 	},
 "viewResolved": {
@@ -50,7 +50,7 @@
 "SPRetrieve": {
 	"name": "{0}_spRetrieve.sql",
 	"template": "Template_spRetrieve.sql",
-	"enable": "true",
+	"enable": "false",
 	"params": { "sp_create_mode": "ALTER" }
 	},
 "SPInsert": {

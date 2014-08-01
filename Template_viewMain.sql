@@ -5,11 +5,11 @@
 AS
 SELECT	<FL Types="AH">{0}<DL>,
 	</DL></FL>,
-	CASE WHEN <FL Types="P">{0} IS NULL<DL> AND </DL></FL> THEN 'Access denied!' ELSE
-		<FL Types="S" Like="*name">{0}<DL> + </DL></FL><IF FE="fl_deleted"> + 
-		CASE WHEN fl_deleted IS NOT NULL THEN ' (X)' ELSE '' END</IF> 
+	CASE WHEN <FL Types="P">{0} IS NULL<DL> AND </DL></FL> 
+		THEN 'Access denied!' 
+		ELSE [tune:SelectName]
 	END AS SelectName,
-	<FL Types="S" Like="*name">{0}<DL> + </DL></FL> AS SelectShortName,
+	[tune:SelectShortName] AS SelectShortName,
 	oaccSecureFlags.fl_read_access   % 2 as fl_read_access,
 	oaccSecureFlags.fl_write_access  % 2 as fl_write_access,
 	oaccSecureFlags.fl_sign_access   % 2 as fl_sign_access,

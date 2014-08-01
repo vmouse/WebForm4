@@ -48,4 +48,4 @@ ELSE
 	RETURN dbo.funcGetErrorCode('ERRSUBMODE','[table_name]',0)
 GO
 
-[include:Template_inc_SQL_grants.txt]
+[include:Template_inc_SQL_grants.sql]
