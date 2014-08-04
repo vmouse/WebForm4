@@ -32,6 +32,13 @@ $SQLtypes = @{ # SQLdecl = format max {0} - type, {1} - size, {2} - precision, {
 	"xml" = 	@{ "Flag"="B"; "C#" = "Byte[]"; "C#N" = "Byte[]"; "SQLdecl" = "{0}"};
 	"binary" = 	@{ "Flag"="B"; "C#" = "Byte[]"; "C#N" = "Byte[]"; "SQLdecl" = "{0}"};
 	"timestamp"=@{ "Flag"="X"; "C#" = "Int64"; "C#N" = "Int64?"; "SQLdecl" = "bigint"};
+
+#	"image" = 	@{ "Flag"="B"; "C#" = "Byte[]"; "C#N" = "Byte[]"; "SQLdecl" = "{0}"};
+#	"text" = 	@{ "Flag"="B"; "C#" = "Byte[]"; "C#N" = "Byte[]"; "SQLdecl" = "{0}"};
+#	"ntext" = 	@{ "Flag"="B"; "C#" = "Byte[]"; "C#N" = "Byte[]"; "SQLdecl" = "{0}"};
+#	"xml" = 	@{ "Flag"="B"; "C#" = "Byte[]"; "C#N" = "Byte[]"; "SQLdecl" = "{0}"};
+#	"binary" = 	@{ "Flag"="B"; "C#" = "Byte[]"; "C#N" = "Byte[]"; "SQLdecl" = "{0}"};
+	
 }
 
 # System fields

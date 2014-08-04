@@ -24,12 +24,19 @@ using System.Xml.Serialization;
 [System.Web.Script.Services.ScriptService]
 public class ws[table_name] : System.Web.Services.WebService
 {
-    [Serializable]
+    [Serializable()]
     public class it[table_name]
     {<AL>
-        <FL Types="AVH">public [v]{4} [v]{0};<DL>
+        <FL Types="AVHb">public [v]{4} [v]{0};<DL>
         </DL></FL>
-    </AL>public it[table_name]() {} // default constructor
+        <FL Types="B">private [v]{4} [v]{0};
+        public [v]String [v]{0}_base64 {
+            get { try { return Convert.ToBase64String({0}); } catch { return null; } }
+            set { {0} = Convert.FromBase64String(value); }
+        }</FL></AL>
+        public it[table_name]() {} // default constructor
+        <FL Types="B">public void   Set_{0}(Byte[] Data) { {0} = Data; }
+        public Byte[] Get_{0}() { return {0}; }</FL>
         public void Save() {<AL>
             it[table_name] item = Go(1, 0, <FL>{0}<DL>, </DL></FL>).ToArray()[0];
             <FL Types="AVH">{0}[v] = item.{0};<DL>
@@ -40,7 +47,7 @@ public class ws[table_name] : System.Web.Services.WebService
         }
     }
 
-    [Serializable]
+    [Serializable()]
     public class it[table_name]_name
     {
         <FL Types="PV">public {4} {0};<DL>
@@ -115,8 +122,13 @@ public class ws[table_name] : System.Web.Services.WebService
     public it[table_name] Get(<FL Types="P">{3} {0}<DL>, </DL></FL>, bool WithBLOBs)
     {
         it[table_name] item = Go(3, 0, <FL Types="P">{0}<DL>, </DL></FL>, <FL Types="p">null<DL>, </DL></FL>).FirstOrDefault();
-        <IF FL="B">if (! WithBLOBs) { <FL Types="B">item.{0}=null; </FL>}
-        </IF>return item;
+        return item;
+    }
+
+    [WebMethod]
+    public it[table_name] Get2(<FL Types="P">String {0}<DL>, </DL></FL>, bool WithBLOBs)
+    {
+        return Get(<FL Types="P">{3}.Parse({0})<DL>, </DL></FL>, WithBLOBs);
     }
 
     <FL Types="B">
@@ -124,7 +136,7 @@ public class ws[table_name] : System.Web.Services.WebService
     public Byte[] GetBLOB_{0}(<FL Types="P">{3} {0}<DL>, </DL></FL>)
     {
         it[table_name] item = Go(3, 0, <FL Types="P">{0}<DL>, </DL></FL>, <FL Types="p">null<DL>, </DL></FL>).FirstOrDefault();
-        return item.{0};
+        return item.Get_{0}();
     }
 </FL>
     [WebMethod]
@@ -163,7 +175,7 @@ public class ws[table_name] : System.Web.Services.WebService
             <FL Types="AVHb">item.{0}[v] = ({4})[v]SafeDRValue(Reader,"{0}", cols);<DL>
             </DL></FL>
             if (WithBLOBs) {
-                <FL Types="B">item.{0}[v] = ({4})[v]SafeDRValue(Reader,"{0}", cols);<DL>
+                <FL Types="B">item.Set_{0}(({4})[v]SafeDRValue(Reader,"{0}", cols));<DL>
                 </DL></FL>
             }</AL>
             rec.Add(item);
@@ -238,18 +250,45 @@ public class ws[table_name] : System.Web.Services.WebService
     [WebMethod]
     public String HelloWorld()
     {
+        string str = HttpContext.Current.Request.ApplicationPath.ToString();
         return "Hello " + HttpContext.Current.User.Identity.Name + "! I'm ws[table_name] service<br>\n[webform_version]\n";
     }
 }
 
 /* Check web-services section in web.config:
+<system.web.extensions>
+    <scripting>
+      <webServices>
+        <jsonSerialization maxJsonLength="5000000"/>
+      </webServices>
+    </scripting>
+    <webServices> 
+        <protocols> 
+            <clear />
+            <add name="HttpGet"/> 
+            <add name="HttpPost"/> 
+        </protocols> 
+    </webServices>
+</system.web.extensions>
+<system.webServer>
+    <security>
+        <authentication>
+            <windowsAuthentication useKernelMode="true">
+                <extendedProtection tokenChecking="None" />
+                <providers>
+                    <clear />
+                    <add value="NTLM" />
+                </providers>
+            </windowsAuthentication>
+        </authentication>
+        <authorization>
+            <add accessType="Deny" users="?" />
+        </authorization>
+    </security>
+</system.webServer>
 <system.web>
-                <authentication mode="Windows"/>
-                <webServices> 
-                <protocols> 
-                    <add name="HttpGet"/> 
-                    <add name="HttpPost"/> 
-                </protocols> 
-</webServices>
+    <authentication mode="Windows"/>
+    <identity impersonate="false" />
+    <customErrors mode="Off" />
 </system.web>
 */

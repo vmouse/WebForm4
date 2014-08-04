@@ -67,12 +67,14 @@
 			$.postJSON("/_srv/ws[table_name].asmx/Get", {
 				<FL Types="P">{0}: ev.val<DL>,
 				</DL></FL>, 
-				WithBLOBs: false
+				WithBLOBs: true
 			}, function (records) {
 					$.each(records.d, function (key, val) {
 						if (!! $("#"+key).length) {
 							if (isdate = /\/Date\((\d+)\)\//.exec(val)) { val = Date(isdate[1]); }
-							$("#"+key).val(val);
+							if (<FL Types="B">(key == "{0}")<DL> or </DL></FL>) {
+								$("#"+key+"_base64").attr("src", "data:image/jpeg;base64,"+val);
+							} else { $("#"+key).val(val); }
 						}
 		  });
 			});
@@ -84,7 +86,9 @@
 <p><input type="hidden" class="select" id="select_[table_name]"/></p>
 <FL Types="P"><input type="hidden" class="[table_name]_input" id="{0}" /><DL>
 </DL></FL>
-<FL Types="pvf"><p>{1}<br /><input type="text" class="[table_name]_input" id="{0}" /></p><DL>
+<FL Types="pvfb"><p>{1}<br /><input type="text" class="[table_name]_input" id="{0}" /></p><DL>
+</DL></FL>
+<FL Types="B"><p>{1}<br /><img id="{0}_base64" src="" /></p><DL>
 </DL></FL>
 <FL Types="VFH"><p>{1}<br /><input type="text" class="[table_name]_input" id="{0}" /></p><DL>
 </DL></FL>
