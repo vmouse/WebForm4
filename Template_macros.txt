@@ -32,16 +32,16 @@ expression:			- набор аттрибутов определяющих усл�
 <FL params>строка_формата<DL params>строка_разделителя</DL></FL> - формирует список полей таблицы по заданному формату. FL могут быть вложенные, соотв. сначала обрабатываются внутренние
 
 В формат подставляются данные о текущем поле:
-{0} - field name
-{1} - field title (description or name if null one)
-{2} - SQL data type with size/scale/precision (varchar(64))
-{3} - C data type string
-{4} - Nullable C data type string
-{5} - Lookup Table
-{6} - Lookup table key field
-{7} - Field number
-{8} - Referenced table primary key (for R filter)
-{9} - Data size (Max input length of form elements)
+{0} или {name}	- field name
+{1} или {desc}	- field title (description or name if null one)
+{2} или {sql}	- SQL data type with size/scale/precision (varchar(64))
+{3} или {c} 	- C data type string
+{4} или {cn}	- Nullable C data type string
+{5} или {ft}	- Lookup Table
+{6} или {fk}	- Lookup table key field
+{7} или {num}	- Field number
+{8} или {refpk}	- Referenced table primary key (for R filter)
+{9} или {size}	- Data size (Max input length of form elements)
 
 params:
 

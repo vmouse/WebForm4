@@ -34,6 +34,26 @@ $SQLtypes = @{ # SQLdecl = format max {0} - type, {1} - size, {2} - precision, {
 	"timestamp"=@{ "Flag"="X"; "C#" = "Int64"; "C#N" = "Int64?"; "SQLdecl" = "bigint"};
 }
 
+function FormatParams($formatstr, $params) {
+	$tab =@{"{name}"  = "{0}";
+			"{desc}"  = "{1}";
+			"{sql}"	  = "{2}";
+			"{c}" 	  = "{3}";
+			"{cn}"	  = "{4}";
+			"{ft}"	  = "{5}";
+			"{fk}"	  = "{6}";
+			"{num}"	  = "{7}";
+			"{refpk}" = "{8}";
+			"{size}"  = "{9}"}
+
+	foreach ($key in $tab.Keys) {
+		$formatstr = $formatstr.Replace($key, $tab[$key])
+	}
+	# replace non tags brakets
+	$formatstr = $formatstr -replace "\W}","$&}" -replace "{\D","{$&"
+	return ($formatstr -f $params)
+}
+
 # System fields
 $sys_fields = @{
 	"fl_created" = @{"RW"=0; "Flag"="H" };
@@ -281,7 +301,7 @@ function VerticalAlign($block, [char]$align_char, [int]$tabsize=4) {
 	return $ar -join "`r`n"
 }
 
-function FillParams($col) {
+function CreateParams($col) {
 	$params = @((IIF -q ([Char[]]$columns[$col]["Flag"] -contains "R") -y $columns[$col]["FKLocalKey"] -n $col); 
 		ISNULL -e $columns[$col]["Description"] -ifnull $col;
 		$columns[$col]["TypeDecl"];
@@ -344,7 +364,7 @@ function ParseIFMacros($iftype="IF", $text, $col, $prevresult=$false) {
 						$result = $result -and $found
 					} else { 
 					if ($attrname -eq "FC") {
-						$attrvalue = $attrvalue -f (FillParams -col $colitem)
+						$attrvalue = FormatParams -formatstr $attrvalue -params (CreateParams -col $colitem)
 						try {
 							$result = $result -and (Invoke-Expression $attrvalue)
 						} catch {
@@ -371,6 +391,7 @@ function ParseIFMacros($iftype="IF", $text, $col, $prevresult=$false) {
 #   group[1] - whole tag
 #   group[2] - tag attributes
 #   group[3] - tag value
+$global:dl_parsed=""
 function ParseFieldList($tag, $can_continue) {
 #	write-host -ForegroundColor DarkGreen ("Parse: " + $tag.Value)
 	$reg_dl = [regex]"(?sim)<DL\s*?(.*?)>(.*?)<\/DL>"
@@ -429,19 +450,18 @@ function ParseFieldList($tag, $can_continue) {
 		})
 		return (-not $denied) -and (($overlap.Length -ge $fl_min_overlap) -or $all_fields_base)
 	} | sort { $columns[$_]["Number"]} | foreach {
-		$params = FillParams -col $_
+		$params = CreateParams -col $_
 		
 		$ifmac = ParseIFMacros -iftype "IFF" -text $fl_val -col $_ -prevresult $ifmac["prevresult"]
 		$fl_parsed = $ifmac["text"]
 
 		$continue = ((-not [string]::IsNullOrEmpty($field_list)) -or ($can_continue -and ($fl_filter -contains "<")))
 		if ($continue) {
-#			$field_list += $dl_parsed
-			$field_list += (($dl_val -replace "\W}","$&}" -replace "{\D","{$&") -f $params)
+			$field_list += $global:dl_parsed
 		}
 		try {
-			$field_list += (($fl_parsed -replace "\W}","$&}" -replace "{\D","{$&") -f $params)
-#			$dl_parsed = ($dl_val -f $params)
+			$global:dl_parsed = (FormatParams -formatstr $dl_val -params $params)
+			$field_list += (FormatParams -formatstr $fl_parsed -params $params)
 		} catch {
 			Write-Host "`n`nError in template: $Template"
 			Write-Host ("Look  entry of <FL> block: " + $fl_parsed)
@@ -451,20 +471,30 @@ function ParseFieldList($tag, $can_continue) {
 	return $field_list
 }
 
-#find all blocks between $tagbegin and $tagend, and parse it by $func
-# $tagbegin = regex with 3 groups = 1-whole tag, 2-tag attributes, 3-tag value
-function ParseTagBlocks ($text, $tagbegin, $tagend, $parse_func) {
-	$continue_flag = $false
-	while (($mstop = [regex]::Match($text, $tagend)).Success) {
-		if (-not ($tag = [regex]::Match($mstop.Value, $tagbegin)).Success) {
-			throw "$tagbegin not found for $tagend in position $(mstop.index)"
+function ParseEvalBlock($tag, $can_continue) {
+	return (Invoke-Expression $tag.Groups[3].Value)
+}
+
+function ParseAlignBlock($tag, $can_continue) {
+	return (VerticalAlign -block $tag.Groups[3].Value -align_char " ")
+}
+
+#find all $tagname tags and parse it by $func
+function ParseTagBlocks ($text, $tagname, $parse_func) {
+	$continue_flag = $false 
+	$reg_pat = "(?sim).*(<$tagname\s*?(.*?)>(.*?)<\/$tagname>)" 
+	$reg_end = "(?sim).*?</$tagname>" # паттерн вылавливания первого конца тэга (нужно для возможности вложенного поиска)
+	while (($mstop = [regex]::Match($text, $reg_end )).Success) {
+		if (-not ($tag = [regex]::Match($mstop.Value, $reg_pat)).Success) {
+			Write-Host -ForegroundColor red "'$tagpat' not found for '$tagend' in position $($mstop.index)"
+			throw 
 		} else { # tag found, start parsing
 			$last_index = -1
 			if ($tag.Index -eq $last_index) {
 				# предыдущий парсинг ничего не изменил в тексте?
 				throw "Parser error!"
 			}
-			$last_index = $tag.Index
+			$last_index = $tag.Index			
 			$parsed = (& $parse_func -tag $tag -can_continue $continue_flag)
 			$continue_flag = -not [string]::IsNullOrEmpty($parsed)
 			$text = $text.Replace($tag.Groups[1].Value, $parsed)
@@ -530,31 +560,17 @@ Param(
 		$out = $out -replace "\[pk\]", $pk
 	}
 
-	$reg_fl = "(?sim).*(<FL\s*?(.*?)>(.*?)<\/FL>)" 
-	$reg_fl_end = "(?sim).*?</FL>" # паттерн вылавливания первого конца тэга FL (нужно для возможности вложенного поиска)
+	$reg_fl = ".*(<FL\s*?(.*?)>(.*?)<\/FL>)" 
+	$reg_fl_end = ".*?</FL>" # паттерн вылавливания первого конца тэга FL (нужно для возможности вложенного поиска)
 	
 	$dl_parsed = ""
 	$ifmac = @{"prevresult"=$false}
 
-	$out = ParseTagBlocks -text $out -tagbegin $reg_fl -tagend $reg_fl_end -parse_func ParseFieldList
+	$out = ParseTagBlocks -text $out -tagname "FL" -parse_func ParseFieldList
 	
-	#find eval blocks
-	$reg_eval= [regex]"(?sim)<CALC>(.+?)</CALC>"
-	$exp = $reg_eval.Match($out)
-	while ($exp.Success) {
-		$out = $out.Replace($exp.Value, (Invoke-Expression $exp.Groups[1].Value))
-		$exp = $reg_eval.Match($out)
-	}
+	$out = ParseTagBlocks -text $out -tagname "CALC" -parse_func ParseEvalBlock
 	
-	#align
-	$reg_align= [regex]"(?sim)<AL\s*?(.*?)>(.+?)</AL>"
-	$al = $reg_align.Match($out)
-	while ($al.Success) {
-		$al_opt = $al.Groups[1].Value
-		$al_val = $al.Groups[2].Value
-		$out = $out.Replace($al.Value, (VerticalAlign -block $al_val -align_char " "))
-		$al = $reg_align.Match($out)
-	}
+	$out = ParseTagBlocks -text $out -tagname "AL" -parse_func ParseAlignBlock
 
 	if ($OutFile.Length -gt 0) {
 		$out | Out-File -LiteralPath $OutFile -Encoding utf8
