@@ -2,7 +2,7 @@
 "WS": {
 	"name": "ws{0}.asmx",
 	"template": "Template_ASMX.asmx",
-	"enable": "false",
+	"enable": "true",
 	"params": { }
 	},
 "AJAX": {
@@ -50,7 +50,7 @@
 "SPRetrieve": {
 	"name": "{0}_spRetrieve.sql",
 	"template": "Template_spRetrieve.sql",
-	"enable": "true",
+	"enable": "false",
 	"params": { "sp_create_mode": "ALTER" }
 	},
 "SPInsert": {

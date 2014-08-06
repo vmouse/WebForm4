@@ -17,6 +17,10 @@ using System.Linq;
 using System.Collections;
 using System.Collections.Generic;
 using System.Xml.Serialization;
+<IF FL="B">using System.Drawing;
+using System.Drawing.Imaging;
+using System.Drawing.Drawing2D;
+using System.IO;</IF>
 
 [WebService(Namespace = "http://support/", Description = "[webform_version]")]
 [WebServiceBinding(ConformsTo = WsiProfiles.BasicProfile1_1)]
@@ -131,14 +135,6 @@ public class ws[table_name] : System.Web.Services.WebService
         return Get(<FL Types="P">{3}.Parse({0})<DL>, </DL></FL>, WithBLOBs);
     }
 
-    <FL Types="B">
-    [WebMethod]
-    public Byte[] GetBLOB_{0}(<FL Types="P">{3} {0}<DL>, </DL></FL>)
-    {
-        it[table_name] item = Go(3, 0, <FL Types="P">{0}<DL>, </DL></FL>, <FL Types="p">null<DL>, </DL></FL>).FirstOrDefault();
-        return item.Get_{0}();
-    }
-</FL>
     [WebMethod]
     public it[table_name][] Exec(int Mode, int SubMode, <FL>{4} {0}<DL>, </DL></FL>)
     {
@@ -247,6 +243,58 @@ public class ws[table_name] : System.Web.Services.WebService
         return Results ?? new List<it[table_name]>();
     }
 
+    public static Image ResizeImage(Image image, int desWidth, int desHeight, bool fillPadding)
+    {
+        int x, y, w, h;
+
+        if (image.Height > image.Width)
+        {
+            w = (image.Width * desHeight) / image.Height;
+            h = desHeight;
+            x = (desWidth - w) / 2;
+            y = 0;
+        }
+        else
+        {
+            w = desWidth;
+            h = (image.Height * desWidth) / image.Width;
+            x = 0;
+            y = (desHeight - h) / 2;
+        }
+
+        var bmp = new Bitmap(desWidth, desHeight);
+
+        using (Graphics g = Graphics.FromImage(bmp))
+        {
+            if (fillPadding) {
+                g.Clear((new Bitmap(image)).GetPixel(0, 0));
+            }
+            g.CompositingQuality = CompositingQuality.HighQuality;
+            g.InterpolationMode = InterpolationMode.HighQualityBicubic;
+            g.DrawImage(image, x, y, w, h);
+        }
+        return bmp;
+    }
+
+    <FL Types="B">
+    [WebMethod]
+    public String GetImage_{0}(<FL Types="P">{3} {0}, </FL>int Width, int Height, String OutputFormat)
+    {
+        it[table_name] item = Go(3, 0, <FL Types="P">{0}<DL>, </DL></FL>, <FL Types="p">null<DL>, </DL></FL>).FirstOrDefault();
+        ImageConverter conv = new ImageConverter();
+        using(MemoryStream ms = new MemoryStream())
+        {
+            var resized = ResizeImage((Bitmap)(conv.ConvertFrom(item.Get_emp_photo())), Width, Height, (OutputFormat == "image/jpeg"));
+            if (OutputFormat == "image/png") {
+                resized.Save(ms, ImageFormat.Png);
+            } else if (OutputFormat == "image/jpeg") {
+                resized.Save(ms, ImageFormat.Jpeg);
+            } else { throw new Exception("Invalid OutputFormat! Allowed image/png or image/jpeg only"); }
+            return "data:"+OutputFormat+";base64,"+Convert.ToBase64String(ms.ToArray());
+        }
+//        return "data:image/jpeg;base64"+Convert.ToBase64String((byte[])conv.ConvertTo(resized, typeof(byte[])));
+    }
+</FL>
     [WebMethod]
     public String HelloWorld()
     {

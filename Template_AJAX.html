@@ -24,7 +24,7 @@
 		return jQuery.ajax({
 			'type': 'POST',
 			'url': url,
-			'contentType': 'application/json',
+			'contentType': 'application/json; charset=utf-8',
 			'data': JSON.stringify(data),
 			'dataType': 'json',
 			'success': callback
@@ -67,17 +67,26 @@
 			$.postJSON("/_srv/ws[table_name].asmx/Get", {
 				<FL Types="P">{0}: ev.val<DL>,
 				</DL></FL>, 
-				WithBLOBs: true
+				WithBLOBs: false
 			}, function (records) {
 					$.each(records.d, function (key, val) {
 						if (!! $("#"+key).length) {
 							if (isdate = /\/Date\((\d+)\)\//.exec(val)) { val = Date(isdate[1]); }
-							if (<FL Types="B">(key == "{0}")<DL> or </DL></FL>) {
-								$("#"+key+"_base64").attr("src", "data:image/jpeg;base64,"+val);
-							} else { $("#"+key).val(val); }
+							if (<FL Types="B">(key != "{0}")<DL> and </DL></FL>) {
+								$("#"+key).val(val); // non Blob data
+							} else {  // If WithBLOBs = true 
+//								$("#"+key).attr("src", "data:image/jpeg;base64,"+val);
+							}
 						}
-		  });
+		  			});
 			});
+			<FL Types="B">$.postJSON("/_srv/wsEmployee.asmx/GetImage_{0}", {
+				emp_id: ev.val, 
+				Width: 200,
+				Height: 200,
+				OutputFormat: "image/jpeg"
+				}, function (records) { $("#{0}").attr("src", records.d); }
+			);</FL>
 	  });
 });
 
@@ -88,7 +97,7 @@
 </DL></FL>
 <FL Types="pvfb"><p>{1}<br /><input type="text" class="[table_name]_input" id="{0}" /></p><DL>
 </DL></FL>
-<FL Types="B"><p>{1}<br /><img id="{0}_base64" src="" /></p><DL>
+<FL Types="B"><p>{1}<br /><img id="{0}" src="" /></p><DL>
 </DL></FL>
 <FL Types="VFH"><p>{1}<br /><input type="text" class="[table_name]_input" id="{0}" /></p><DL>
 </DL></FL>
