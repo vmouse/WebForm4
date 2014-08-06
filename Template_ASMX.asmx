@@ -281,18 +281,21 @@ public class ws[table_name] : System.Web.Services.WebService
     public String GetImage_{0}(<FL Types="P">{3} {0}, </FL>int Width, int Height, String OutputFormat)
     {
         it[table_name] item = Go(3, 0, <FL Types="P">{0}<DL>, </DL></FL>, <FL Types="p">null<DL>, </DL></FL>).FirstOrDefault();
-        ImageConverter conv = new ImageConverter();
-        using(MemoryStream ms = new MemoryStream())
-        {
-            var resized = ResizeImage((Bitmap)(conv.ConvertFrom(item.Get_emp_photo())), Width, Height, (OutputFormat == "image/jpeg"));
-            if (OutputFormat == "image/png") {
-                resized.Save(ms, ImageFormat.Png);
-            } else if (OutputFormat == "image/jpeg") {
-                resized.Save(ms, ImageFormat.Jpeg);
-            } else { throw new Exception("Invalid OutputFormat! Allowed image/png or image/jpeg only"); }
-            return "data:"+OutputFormat+";base64,"+Convert.ToBase64String(ms.ToArray());
-        }
-//        return "data:image/jpeg;base64"+Convert.ToBase64String((byte[])conv.ConvertTo(resized, typeof(byte[])));
+        byte[] img = item.Get_{0}();
+        if (img != null) {
+            ImageConverter conv = new ImageConverter();
+            using(MemoryStream ms = new MemoryStream())
+            {
+                var resized = ResizeImage((Bitmap)(conv.ConvertFrom(img)), Width, Height, (OutputFormat == "image/jpeg"));
+                if (OutputFormat == "image/png") {
+                    resized.Save(ms, ImageFormat.Png);
+                } else if (OutputFormat == "image/jpeg") {
+                    resized.Save(ms, ImageFormat.Jpeg);
+                } else { throw new Exception("Invalid OutputFormat! Allowed image/png or image/jpeg only"); }
+                return "data:"+OutputFormat+";base64,"+Convert.ToBase64String(ms.ToArray());
+            }
+    //        return "data:image/jpeg;base64"+Convert.ToBase64String((byte[])conv.ConvertTo(resized, typeof(byte[])));
+        } else return "";
     }
 </FL>
     [WebMethod]

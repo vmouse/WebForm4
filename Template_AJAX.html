@@ -4,11 +4,12 @@
 	<title>[table_name]</title>
 	<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 	<meta charset="UTF-8" />
-	<link href="/js/select2/select2.css" rel="stylesheet"/>
+	<link rel="stylesheet" href="/js/select2/select2.css" />
+	<link rel="stylesheet" href="/js/pickmeup.css" />
 	<script type='text/javascript' src='/js/jquery.min.js'></script>
 	<script type='text/javascript' src="/js/select2/select2.min.js"></script>
 	<script type='text/javascript' src="/js/select2/select2_locale_ru.js"></script>
-
+	<script type="text/javascript" src="/js/jquery.pickmeup.js"></script>
 	<style>
 		.[table_name]_form input, select, .select
 		{
@@ -71,7 +72,10 @@
 			}, function (records) {
 					$.each(records.d, function (key, val) {
 						if (!! $("#"+key).length) {
-							if (isdate = /\/Date\((\d+)\)\//.exec(val)) { val = Date(isdate[1]); }
+							if (isdate = /\/Date\((\d+)\)\//.exec(val)) { 
+								date = new Date(parseInt(isdate[1])); 
+								val = (date.getFullYear() + '-' + ('0' + (date.getMonth() + 1)).slice(-2) + '-' + ('0' + (date.getDate()+1)).slice(-2));
+							}
 							if (<FL Types="B">(key != "{0}")<DL> and </DL></FL>) {
 								$("#"+key).val(val); // non Blob data
 							} else {  // If WithBLOBs = true 
@@ -87,8 +91,13 @@
 				OutputFormat: "image/jpeg"
 				}, function (records) { $("#{0}").attr("src", records.d); }
 			);</FL>
-	  });
-});
+		});
+		<FL Types="D">$('#{0}').pickmeup({
+			format  : 'Y-m-d',
+			position		: 'bottom',
+			hide_on_select	: true
+		});</FL>
+	});
 
 </script>
 <div class="[table_name]_form">
