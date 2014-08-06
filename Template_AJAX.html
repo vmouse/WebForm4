@@ -76,11 +76,9 @@
 								date = new Date(parseInt(isdate[1])); 
 								val = (date.getFullYear() + '-' + ('0' + (date.getMonth() + 1)).slice(-2) + '-' + ('0' + (date.getDate()+1)).slice(-2));
 							}
-							if (<FL Types="B">(key != "{0}")<DL> and </DL></FL>) {
-								$("#"+key).val(val); // non Blob data
-							} else {  // If WithBLOBs = true 
+							<IF FL="B">if (<FL Types="B">(key == "{0}")<DL> or </DL></FL>) {
 //								$("#"+key).attr("src", "data:image/jpeg;base64,"+val);
-							}
+							} else </IF>$("#"+key).val(val); 
 						}
 		  			});
 			});

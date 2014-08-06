@@ -242,7 +242,7 @@ public class ws[table_name] : System.Web.Services.WebService
         }
         return Results ?? new List<it[table_name]>();
     }
-
+<IF FL="B">
     public static Image ResizeImage(Image image, int desWidth, int desHeight, bool fillPadding)
     {
         int x, y, w, h;
@@ -297,7 +297,7 @@ public class ws[table_name] : System.Web.Services.WebService
     //        return "data:image/jpeg;base64"+Convert.ToBase64String((byte[])conv.ConvertTo(resized, typeof(byte[])));
         } else return "";
     }
-</FL>
+</FL></IF>
     [WebMethod]
     public String HelloWorld()
     {
