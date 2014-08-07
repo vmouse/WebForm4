@@ -11,6 +11,12 @@
 	"enable": "true",
 	"params": { }
 	},
+"AJAXCACHED": {
+	"name": "{0}_cached.html",
+	"template": "Template_AJAX_cached.html",
+	"enable": "true",
+	"params": { }
+	},
 "PowerWebPart": {
 	"name": "{0}.pwp",
 	"template": "Template_PWP.ps1",
@@ -50,7 +56,7 @@
 "SPRetrieve": {
 	"name": "{0}_spRetrieve.sql",
 	"template": "Template_spRetrieve.sql",
-	"enable": "true",
+	"enable": "false",
 	"params": { "sp_create_mode": "ALTER" }
 	},
 "SPInsert": {

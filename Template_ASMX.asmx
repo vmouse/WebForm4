@@ -126,6 +126,9 @@ public class ws[table_name] : System.Web.Services.WebService
     public it[table_name] Get(<FL Types="P">{3} {0}<DL>, </DL></FL>, bool WithBLOBs)
     {
         it[table_name] item = Go(3, 0, <FL Types="P">{0}<DL>, </DL></FL>, <FL Types="p">null<DL>, </DL></FL>).FirstOrDefault();
+        <IF FL="B">if (!WithBLOBs) { 
+            <FL Types="B">item.Set_{0}(null);
+        </FL>}</IF>
         return item;
     }
 

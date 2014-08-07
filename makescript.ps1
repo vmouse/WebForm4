@@ -14,9 +14,9 @@ $SQLtypes = @{ # SQLdecl = format max {0} - type, {1} - size, {2} - precision, {
 	"nvarchar" =@{ "Flag"="S"; "C#" = "String"; "C#N" = "String"; "SQLdecl" = "{0}({1})"};
 	"char" = 	@{ "Flag"="S"; "C#" = "String"; "C#N" = "String"; "SQLdecl" = "{0}({1})"};
 	"nchar" = 	@{ "Flag"="S"; "C#" = "String"; "C#N" = "String"; "SQLdecl" = "{0}({1})"};
-	"int" = 	@{ "Flag"="I"; "C#" = "Int";    "C#N" = "Int?"; "SQLdecl" = "{0}"};
+	"int" = 	@{ "Flag"="I"; "C#" = "Int32";    "C#N" = "Int32?"; "SQLdecl" = "{0}"};
 	"bigint" = 	@{ "Flag"="I"; "C#" = "Int64";  "C#N" = "Int64?"; "SQLdecl" = "{0}"};
-	"smallint" =@{ "Flag"="I"; "C#" = "Int";    "C#N" = "Int?"; "SQLdecl" = "{0}"};
+	"smallint" =@{ "Flag"="I"; "C#" = "Int32";    "C#N" = "Int32?"; "SQLdecl" = "{0}"};
 	"tinyint"  =@{ "Flag"="I"; "C#" = "Byte";   "C#N" = "Byte?"; "SQLdecl" = "{0}"};
 	"money" = 	@{ "Flag"="N"; "C#" = "Float";  "C#N" = "Float?"; "SQLdecl" = "{0}"};
 	"decimal" =	@{ "Flag"="N"; "C#" = "Float";  "C#N" = "Float?"; "SQLdecl" = "{0}({2},{3})"};
@@ -252,7 +252,7 @@ Param(
 			$columns[$agrcolname]["FKTable"]=$rdr["RefTable"]
 			$columns[$agrcolname]["FKTableKey"]=$rdr["RefCol"]
 			$columns[$agrcolname]["FKTablePK"]=$rdr["RefPK"]
-			$columns[$agrcolname]["Flag"]=$columns[$rdr["LocCol"]]["Flag"]+"R"
+			$columns[$agrcolname]["Flag"]=(SG -hash $SQLtypes[$columns[$rdr["LocCol"]]["Type"]] -field "Flag" -default "") + "R"
 			$columns[$agrcolname]["RW"]=$columns[$rdr["LocCol"]]["RW"]
 			$colnum++
 		}
@@ -552,8 +552,8 @@ Param(
 	$out = (ParseIFMacros -iftype "IF" -text $out -col $columns)["text"]
 
 	# parse [pk]
-	$pk = $columns.keys | where {($DBInstanceKey, $DBRefKey) -notcontains $_} | where { [Char[]]$columns[$_]["Flag"] -contains "P" }
 	if ($out -match "\[pk\]") {
+		$pk = $columns.keys | where { [Char[]]$columns[$_]["Flag"] -contains "P" }
 		if (($pk.count -gt 1) -or ($pk -eq $null)) {
 			throw "Single-field Primary key need!"
 		}

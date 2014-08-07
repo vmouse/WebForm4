@@ -33,36 +33,46 @@
 	};
 
 	$(document).ready(function () {
-	   rows_per_page = 20;
-	   $("#select_[table_name]").select2({
+		rows_per_page = 20;
+		$("#select_[table_name]").select2({
 			placeholder: "Search for [table_name]",
-			minimumInputLength: 2,
-			ajax: {
-				url: "/_srv/ws[table_name].asmx/Find",
-				type: "POST",
-				dataType: "json",
-				quietMillis: 500,
-				params: {
-					contentType: 'application/json; charset=utf-8'
-				},
-				crossDomain: true,
-				xhrFields: {
-					withCredentials: true
-				},
-				data: function (search_str, page, context) { // context is paging token with next id 
-					return JSON.stringify({
-					SubMode: 0,
-					PageNumber: page-1,
-					RowsPerPage: rows_per_page,
-					SearchToken: search_str || null
-					});
-				},
-				results: function (data, page) {
-					var res = [];
-					$.each(data.d, function (num, item) { res.push({ id: <FL Types="P">item.{0}<DL>+</DL></FL>, text: <FL Types="V">item.{0}<DL> + </DL></FL> })});
-					return { results: res, more: res.length == rows_per_page, context: (res.length > 0) ? res[res.length - 1].id : null };
+			minimumInputLength: 0,
+			cacheDataSource: [],
+			query: function(query) {
+				self = this;
+				var key = query.page+"/"+rows_per_page+":"+query.term;
+				var cachedData = self.cacheDataSource[key];
+
+				if(cachedData) {
+					query.callback({results: cachedData.results});
+					return;
+				} else {
+					$.ajax({
+						url: "/_srv/ws[table_name].asmx/Find",
+						type: "POST",
+						dataType: "json",
+						quietMillis: 500,
+						cache: true,
+						contentType: 'application/json; charset=utf-8',
+						crossDomain: true,
+						xhrFields: {
+							withCredentials: true
+						},
+						data: JSON.stringify({ SubMode: 0,
+								PageNumber: query.page-1,
+								RowsPerPage: rows_per_page,
+								SearchToken: query.term || null
+						}),
+						success: function(data) {
+							var res = [];
+							$.each(data.d, function (num, item) { res.push({ id: item.[pk], text: item.SelectName })});
+							var retdata = { results: res, more: res.length == rows_per_page, context: (res.length > 0) ? res[res.length - 1].id : null };
+							self.cacheDataSource[key] = retdata;
+							query.callback(retdata);
+						}
+					})//, formatResult: (function (item) { return item.SelectName; }), 
 				}
-			}//, formatResult: (function (item) { return item.SelectName; }), 
+			}
 		});
 		$("#select_[table_name]").on("change", function (ev) { 
 			$.postJSON("/_srv/ws[table_name].asmx/Get", {
@@ -80,7 +90,7 @@
 //								$("#"+key).attr("src", "data:image/jpeg;base64,"+val);
 							} else </IF>$("#"+key).val(val); 
 						}
-		  			});
+					});
 			});
 			<FL Types="B">$.postJSON("/_srv/wsEmployee.asmx/GetImage_{0}", {
 				emp_id: ev.val, 
