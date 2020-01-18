@@ -1,5 +1,5 @@
 # Download all images from BLOB field emp_photo of table Employee via ASMX-webservice
-# for use this example need:
+# to use this example you need have these prerequisites:
 #	create and execute all SQL-scripts (views and stored procs)
 #	create and save asmx-page
 
